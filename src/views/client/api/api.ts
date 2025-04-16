@@ -27,3 +27,27 @@ export const fetchClients = async (params?: {
         throw error
     }
 }
+
+export const fetchClient = async (params?: {
+    page?: number
+    limit?: number
+    search?: string
+}) => {
+    try {
+        const response = await BaseService.get("/client", { params })
+        return response.data
+    } catch (error) {
+        console.log(error)
+        throw error
+    }
+}
+
+export const deleteClient = async (id: string) => {
+    try {
+        const response = await BaseService.delete(`/client/${id}`)
+        return response.data.success
+    } catch (error) {
+        console.log(error)
+        throw error
+    }
+}

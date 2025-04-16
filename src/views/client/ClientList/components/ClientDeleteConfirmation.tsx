@@ -3,8 +3,8 @@ import Notification from '@/components/ui/Notification'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import {
     toggleDeleteConfirmation,
-    deleteProduct,
-    getProducts,
+    deleteClient,
+    getClients,
     useAppDispatch,
     useAppSelector,
 } from '../store'
@@ -12,13 +12,13 @@ import {
 const ClientDeleteConfirmation = () => {
     const dispatch = useAppDispatch()
     const dialogOpen = useAppSelector(
-        (state) => state.salesProductList.data.deleteConfirmation,
+        (state) => state.clientList.data.deleteConfirmation,
     )
-    const selectedProduct = useAppSelector(
-        (state) => state.salesProductList.data.selectedProduct,
+    const selectedClient = useAppSelector(
+        (state) => state.clientList.data.selectedClient,
     )
     const tableData = useAppSelector(
-        (state) => state.salesProductList.data.tableData,
+        (state) => state.clientList.data.tableData,
     )
 
     const onDialogClose = () => {
@@ -27,17 +27,17 @@ const ClientDeleteConfirmation = () => {
 
     const onDelete = async () => {
         dispatch(toggleDeleteConfirmation(false))
-        const success = await deleteProduct({ id: selectedProduct })
+        const success = await deleteClient({ id: selectedClient })
 
         if (success) {
-            dispatch(getProducts(tableData))
+            dispatch(getClients(tableData))
             toast.push(
                 <Notification
-                    title={'Successfuly Deleted'}
+                    title={'Successfully Deleted'}
                     type="success"
                     duration={2500}
                 >
-                    Product successfuly deleted
+                    Client successfully deleted
                 </Notification>,
                 {
                     placement: 'top-center',
@@ -50,7 +50,7 @@ const ClientDeleteConfirmation = () => {
         <ConfirmDialog
             isOpen={dialogOpen}
             type="danger"
-            title="Delete product"
+            title="Delete client"
             confirmButtonColor="red-600"
             onClose={onDialogClose}
             onRequestClose={onDialogClose}
@@ -58,8 +58,8 @@ const ClientDeleteConfirmation = () => {
             onConfirm={onDelete}
         >
             <p>
-                Are you sure you want to delete this product? All record related
-                to this product will be deleted as well. This action cannot be
+                Are you sure you want to delete this client? All records related
+                to this client will be deleted as well. This action cannot be
                 undone.
             </p>
         </ConfirmDialog>

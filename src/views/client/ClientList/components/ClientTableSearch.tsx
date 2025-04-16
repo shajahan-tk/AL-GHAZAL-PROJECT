@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import Input from '@/components/ui/Input'
 import { HiOutlineSearch } from 'react-icons/hi'
 import {
-    getProducts,
+    getClients,
     setTableData,
     useAppSelector,
     useAppDispatch,
@@ -18,7 +18,7 @@ const ClientTableSearch = () => {
     const searchInput = useRef(null)
 
     const tableData = useAppSelector(
-        (state) => state.salesProductList.data.tableData,
+        (state) => state.clientList.data.tableData,
     )
 
     const debounceFn = debounce(handleDebounceFn, 500)
@@ -38,7 +38,7 @@ const ClientTableSearch = () => {
 
     const fetchData = (data: TableQueries) => {
         dispatch(setTableData(data))
-        dispatch(getProducts(data))
+        dispatch(getClients(data))
     }
 
     const onEdit = (e: ChangeEvent<HTMLInputElement>) => {
@@ -50,7 +50,7 @@ const ClientTableSearch = () => {
             ref={searchInput}
             className="max-w-md md:w-52 md:mb-0 mb-4"
             size="sm"
-            placeholder="Search product"
+            placeholder="Search client"
             prefix={<HiOutlineSearch className="text-lg" />}
             onChange={onEdit}
         />

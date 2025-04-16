@@ -1,75 +1,57 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import Avatar from '@/components/ui/Avatar'
-import Badge from '@/components/ui/Badge'
 import DataTable from '@/components/shared/DataTable'
 import { HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi'
-import { FiPackage } from 'react-icons/fi'
-import {
-    getProducts,
-    setTableData,
-    setSelectedProduct,
-    toggleDeleteConfirmation,
-    useAppDispatch,
-    useAppSelector,
-} from '../store'
+import { FiUser } from 'react-icons/fi'
 import useThemeClass from '@/utils/hooks/useThemeClass'
-import UserDeleteConfirmation from './ClientDeleteConfirmation'
 import { useNavigate } from 'react-router-dom'
-import cloneDeep from 'lodash/cloneDeep'
 import type {
     DataTableResetHandle,
-    OnSortParam,
     ColumnDef,
 } from '@/components/shared/DataTable'
 
-type Product = {
-    id: string
-    name: string
-    productCode: string
-    img: string
-    category: string
-    price: number
-    stock: number
-    status: number
-}
+import { useQuery } from '@tanstack/react-query'
+import debounce from 'lodash/debounce'
+import Input from '@/components/ui/Input'
+import { fetchClient } from '../../api/api'
 
-const inventoryStatusColor: Record<
-    number,
-    {
-        label: string
-        dotClass: string
-        textClass: string
+type Client = {
+    _id: string
+    clientName: string
+    clientAddress: string
+    pincode: string
+    mobileNumber: string
+    telephoneNumber: string
+    trnNumber: string
+    createdBy: {
+        _id: string
+        email: string
+        firstName: string
+        lastName: string
     }
-> = {
-    0: {
-        label: 'In Stock',
-        dotClass: 'bg-emerald-500',
-        textClass: 'text-emerald-500',
-    },
-    1: {
-        label: 'Limited',
-        dotClass: 'bg-amber-500',
-        textClass: 'text-amber-500',
-    },
-    2: {
-        label: 'Out of Stock',
-        dotClass: 'bg-red-500',
-        textClass: 'text-red-500',
-    },
+    createdAt: string
+    updatedAt: string
 }
 
-const ActionColumn = ({ row }: { row: Product }) => {
-    const dispatch = useAppDispatch()
+type Pagination = {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasNextPage: boolean
+    hasPreviousPage: boolean
+}
+
+const ActionColumn = ({ row }: { row: Client }) => {
     const { textTheme } = useThemeClass()
     const navigate = useNavigate()
 
     const onEdit = () => {
-        navigate(`/app/sales/product-edit/${row.id}`)
+        navigate(`/app/clients/client-edit/${row._id}`)
     }
 
     const onDelete = () => {
-        dispatch(toggleDeleteConfirmation(true))
-        dispatch(setSelectedProduct(row.id))
+        console.log('Delete client:', row._id)
     }
 
     return (
@@ -90,159 +72,131 @@ const ActionColumn = ({ row }: { row: Product }) => {
     )
 }
 
-const ProductColumn = ({ row }: { row: Product }) => {
-    const avatar = row.img ? (
-        <Avatar src={row.img} />
-    ) : (
-        <Avatar icon={<FiPackage />} />
-    )
-
+const ClientColumn = ({ row }: { row: Client }) => {
     return (
         <div className="flex items-center">
-            {avatar}
-            <span className={`ml-2 rtl:mr-2 font-semibold`}>{row.name}</span>
+            <Avatar icon={<FiUser />} />
+            <span className="ml-2 rtl:mr-2 font-semibold">
+                {row.clientName}
+            </span>
         </div>
     )
 }
 
 const ClientTable = () => {
     const tableRef = useRef<DataTableResetHandle>(null)
+    const [searchTerm, setSearchTerm] = useState('')
+    const [pagination, setPagination] = useState({
+        page: 1,
+        limit: 10,
+    })
+    
+    const { data: response, isLoading, error } = useQuery({
+        queryKey: ['clients', pagination.page, pagination.limit, searchTerm],
+        queryFn: () => fetchClient({
+            page: pagination.page,
+            limit: pagination.limit,
+            search: searchTerm
+        }),
+    })
 
-    const dispatch = useAppDispatch()
-
-    const { pageIndex, pageSize, sort, query, total } = useAppSelector(
-        (state) => state.salesProductList.data.tableData,
-    )
-
-    const filterData = useAppSelector(
-        (state) => state.salesProductList.data.filterData,
-    )
-
-    const loading = useAppSelector(
-        (state) => state.salesProductList.data.loading,
-    )
-
-    const data = useAppSelector(
-        (state) => state.salesProductList.data.productList,
-    )
-
-    useEffect(() => {
-        fetchData()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pageIndex, pageSize, sort])
-
-    useEffect(() => {
-        if (tableRef) {
-            tableRef.current?.resetSorting()
-        }
-    }, [filterData])
-
-    const tableData = useMemo(
-        () => ({ pageIndex, pageSize, sort, query, total }),
-        [pageIndex, pageSize, sort, query, total],
-    )
-
-    const fetchData = () => {
-        dispatch(getProducts({ pageIndex, pageSize, sort, query, filterData }))
+    const clients = response?.data?.clients || []
+    const paginationData = response?.data?.pagination || {
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false
     }
 
-    const columns: ColumnDef<Product>[] = useMemo(
+    const debouncedSearch = useMemo(
+        () => debounce((value: string) => {
+            setSearchTerm(value)
+            setPagination(prev => ({ ...prev, page: 1 }))
+        }, 500),
+        []
+    )
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        debouncedSearch(e.target.value)
+    }
+
+    const columns: ColumnDef<Client>[] = useMemo(
         () => [
             {
-                header: 'Name',
-                accessorKey: 'name',
-                cell: (props) => {
-                    const row = props.row.original
-                    return <ProductColumn row={row} />
-                },
+                header: 'Client Name',
+                accessorKey: 'clientName',
+                cell: (props) => <ClientColumn row={props.row.original} />,
             },
             {
-                header: 'Email',
-                accessorKey: 'Email',
-                cell: (props) => {
-                    const row = props.row.original
-                    return <span className="capitalize">{row.category}</span>
-                },
+                header: 'Address',
+                accessorKey: 'clientAddress',
+                cell: (props) => <span>{props.row.original.clientAddress}</span>,
             },
             {
-                header: 'Phonenumber',
-                accessorKey: 'Phonenumber',
-                sortable: true,
+                header: 'Mobile',
+                accessorKey: 'mobileNumber',
+                cell: (props) => <span>{props.row.original.mobileNumber}</span>,
             },
             {
-                header: 'Role',
-                accessorKey: 'Role',
-                sortable: true,
+                header: 'TRN',
+                accessorKey: 'trnNumber',
+                cell: (props) => <span>{props.row.original.trnNumber}</span>,
             },
             {
-                header: 'Status',
-                accessorKey: 'status',
-                cell: (props) => {
-                    const { status } = props.row.original
-                    return (
-                        <div className="flex items-center gap-2">
-                            <Badge
-                                className={
-                                    inventoryStatusColor[status].dotClass
-                                }
-                            />
-                            <span
-                                className={`capitalize font-semibold ${inventoryStatusColor[status].textClass}`}
-                            >
-                                {inventoryStatusColor[status].label}
-                            </span>
-                        </div>
-                    )
-                },
+                header: 'Created At',
+                accessorKey: 'createdAt',
+                cell: (props) => (
+                    <span>{new Date(props.row.original.createdAt).toLocaleDateString()}</span>
+                ),
             },
-            
             {
                 header: 'Action',
                 id: 'action',
                 cell: (props) => <ActionColumn row={props.row.original} />,
             },
         ],
-        [],
+        []
     )
 
     const onPaginationChange = (page: number) => {
-        const newTableData = cloneDeep(tableData)
-        newTableData.pageIndex = page
-        dispatch(setTableData(newTableData))
+        setPagination(prev => ({ ...prev, page }))
     }
 
-    const onSelectChange = (value: number) => {
-        const newTableData = cloneDeep(tableData)
-        newTableData.pageSize = Number(value)
-        newTableData.pageIndex = 1
-        dispatch(setTableData(newTableData))
+    const onSelectChange = (limit: number) => {
+        setPagination(prev => ({ page: 1, limit }))
     }
 
-    const onSort = (sort: OnSortParam) => {
-        const newTableData = cloneDeep(tableData)
-        newTableData.sort = sort
-        dispatch(setTableData(newTableData))
+    if (error) {
+        return <div>Error loading clients: {(error as Error).message}</div>
     }
 
     return (
         <>
+            <div className="mb-4">
+                <Input
+                    placeholder="Search clients..."
+                    onChange={handleSearchChange}
+                    className="max-w-md"
+                />
+            </div>
+            
             <DataTable
                 ref={tableRef}
                 columns={columns}
-                data={data}
+                data={clients}
                 skeletonAvatarColumns={[0]}
                 skeletonAvatarProps={{ className: 'rounded-md' }}
-                loading={loading}
+                loading={isLoading}
                 pagingData={{
-                    total: tableData.total as number,
-                    pageIndex: tableData.pageIndex as number,
-                    pageSize: tableData.pageSize as number,
+                    total: paginationData.total,
+                    pageIndex: paginationData.page,
+                    pageSize: paginationData.limit,
                 }}
                 onPaginationChange={onPaginationChange}
                 onSelectChange={onSelectChange}
-                onSort={onSort}
             />
-            <UserDeleteConfirmation />
         </>
     )
 }
