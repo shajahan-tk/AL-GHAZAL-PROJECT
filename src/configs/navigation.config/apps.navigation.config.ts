@@ -96,6 +96,41 @@ const appsNavigationConfig: NavigationTree[] = [
                     
                 ],
             },
+
+            {
+                key: 'apps.clients',
+                path: '',
+                title: 'Clients',
+                translateKey: 'nav.appsClients.clients',
+                icon: 'crm',
+                type: NAV_ITEM_TYPE_COLLAPSE,
+                authority: [ADMIN, USER],
+                subMenu: [
+                    
+                    {
+                        key: 'appsClients.clientsList',
+                        path: `${APP_PREFIX_PATH}/client-list`,
+                        title: ' Client List',
+                        translateKey: 'nav.appsClients.clientsList',
+                        icon: '',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [ADMIN, USER],
+                        subMenu: [],
+                    },
+                    {
+                        key: 'appsClients.ClientNew',
+                        path: `${APP_PREFIX_PATH}/client-new`,
+                        title: 'Client New',
+                        translateKey: 'nav.appsClients.ClientNew',
+                        icon: '',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [ADMIN, USER],
+                        subMenu: [],
+                    },
+                  
+                    
+                ],
+            },
         ],
     },
 ]

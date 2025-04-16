@@ -1,12 +1,13 @@
 import Button from '@/components/ui/Button'
 import { HiDownload, HiPlusCircle } from 'react-icons/hi'
-import UserTableSearch from './UserTableSearch'
-import UserFilter from './UserFilter'
+import UserTableSearch from './ClientTableSearch'
+import UserFilter from './ClientFilter'
 import { Link } from 'react-router-dom'
 
-const UserTableTools = () => {
+const ClientTableTools = () => {
     return (
         <div className="flex flex-col lg:flex-row lg:items-center">
+            <UserTableSearch />
             <UserFilter />
             <Link
                 download
@@ -23,11 +24,11 @@ const UserTableTools = () => {
                 to="/app/sales/product-new"
             >
                 <Button block variant="solid" size="sm" icon={<HiPlusCircle />}>
-                    Add User
+                    Add Product
                 </Button>
             </Link>
         </div>
     )
 }
 
-export default UserTableTools
+export default ClientTableTools

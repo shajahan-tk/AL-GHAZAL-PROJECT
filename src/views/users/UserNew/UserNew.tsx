@@ -1,11 +1,10 @@
-import ProductForm, {
-    FormModel,
-    SetSubmitting,
-} from '@/views/sales/ProductForm'
+
 import toast from '@/components/ui/toast'
 import Notification from '@/components/ui/Notification'
 import { useNavigate } from 'react-router-dom'
 import { apiCreateSalesProduct } from '@/services/SalesService'
+import UserForm, { FormModel, SetSubmitting } from '@/views/users/UserForm'
+import { addUser } from '../api/api'
 
 const UserNew = () => {
     const navigate = useNavigate()
@@ -20,23 +19,24 @@ const UserNew = () => {
         setSubmitting: SetSubmitting,
     ) => {
         setSubmitting(true)
-        const success = await addProduct(values)
+        const response:any = await addUser(values)
+        if(response.status===201){
         setSubmitting(false)
-        if (success) {
-            toast.push(
-                <Notification
-                    title={'Successfuly added'}
-                    type="success"
-                    duration={2500}
-                >
-                    Product successfuly added
-                </Notification>,
-                {
-                    placement: 'top-center',
-                },
-            )
-            navigate('/app/sales/product-list')
+        toast.push(
+            <Notification
+                title={'Successfuly added user'}
+                type="success"
+                duration={2500}
+            >
+                User successfuly added
+            </Notification>,
+            {
+                placement: 'top-center',
+            },
+        )
+        navigate('/app/user-list')
         }
+       
     }
 
     const handleDiscard = () => {
@@ -45,7 +45,7 @@ const UserNew = () => {
 
     return (
         <>
-            <ProductForm
+            <UserForm
                 type="new"
                 onFormSubmit={handleFormSubmit}
                 onDiscard={handleDiscard}

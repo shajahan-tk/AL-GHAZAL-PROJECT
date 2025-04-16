@@ -40,9 +40,20 @@ const appsRoute: Routes = [
         component: lazy(() => import('@/views/users/UserList/UserList')),
         authority: [ADMIN, USER],
     },
+    {
+        key: 'appsClients.clientsList',
+        path: `${APP_PREFIX_PATH}/client-list`,
+        component: lazy(() => import('@/views/client/ClientList/ClientList')),
+        authority: [ADMIN, USER],
+    },
+    {
+        key: 'appsClients.ClientNew',
+        path: `${APP_PREFIX_PATH}/client-new`,
+        component: lazy(() => import('@/views/client/Clientform/ClientForm')),
+        authority: [ADMIN, USER],
+    },
     
     
-
 ]
 
 export default appsRoute

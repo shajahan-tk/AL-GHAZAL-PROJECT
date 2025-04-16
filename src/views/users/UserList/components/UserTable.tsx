@@ -1,75 +1,69 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import DataTable from '@/components/shared/DataTable'
 import { HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi'
-import { FiPackage } from 'react-icons/fi'
-import {
-    getProducts,
-    setTableData,
-    setSelectedProduct,
-    toggleDeleteConfirmation,
-    useAppDispatch,
-    useAppSelector,
-} from '../store'
+import { FiUser } from 'react-icons/fi'
 import useThemeClass from '@/utils/hooks/useThemeClass'
 import UserDeleteConfirmation from './UserDeleteConfirmation'
 import { useNavigate } from 'react-router-dom'
-import cloneDeep from 'lodash/cloneDeep'
 import type {
     DataTableResetHandle,
     OnSortParam,
     ColumnDef,
 } from '@/components/shared/DataTable'
+import { fetchUser } from '../../api/api'
+import { useQuery } from '@tanstack/react-query'
+import debounce from 'lodash/debounce'
+import Input from '@/components/ui/Input'
 
-type Product = {
-    id: string
-    name: string
-    productCode: string
-    img: string
-    category: string
-    price: number
-    stock: number
-    status: number
+type User = {
+    _id: string
+    firstName: string
+    lastName: string
+    email: string
+    phoneNumbers: string[]
+    role: string
+    isActive: boolean
+    createdAt: string
+    updatedAt: string
+    createdBy: string
+    __v: number
 }
 
-const inventoryStatusColor: Record<
-    number,
-    {
-        label: string
-        dotClass: string
-        textClass: string
-    }
-> = {
-    0: {
-        label: 'In Stock',
+type Pagination = {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasNextPage: boolean
+    hasPreviousPage: boolean
+}
+
+const userStatusColor = {
+    true: {
+        label: 'Active',
         dotClass: 'bg-emerald-500',
         textClass: 'text-emerald-500',
     },
-    1: {
-        label: 'Limited',
-        dotClass: 'bg-amber-500',
-        textClass: 'text-amber-500',
-    },
-    2: {
-        label: 'Out of Stock',
+    false: {
+        label: 'Inactive',
         dotClass: 'bg-red-500',
         textClass: 'text-red-500',
-    },
+    }
 }
 
-const ActionColumn = ({ row }: { row: Product }) => {
-    const dispatch = useAppDispatch()
+const ActionColumn = ({ row }: { row: User }) => {
     const { textTheme } = useThemeClass()
     const navigate = useNavigate()
 
     const onEdit = () => {
-        navigate(`/app/sales/product-edit/${row.id}`)
+        navigate(`/app/users/user-edit/${row._id}`)
     }
 
     const onDelete = () => {
-        dispatch(toggleDeleteConfirmation(true))
-        dispatch(setSelectedProduct(row.id))
+        // Handle delete directly here or use a context/state management
+        console.log('Delete user:', row._id)
     }
 
     return (
@@ -90,159 +84,160 @@ const ActionColumn = ({ row }: { row: Product }) => {
     )
 }
 
-const ProductColumn = ({ row }: { row: Product }) => {
-    const avatar = row.img ? (
-        <Avatar src={row.img} />
-    ) : (
-        <Avatar icon={<FiPackage />} />
-    )
-
+const UserColumn = ({ row }: { row: User }) => {
     return (
         <div className="flex items-center">
-            {avatar}
-            <span className={`ml-2 rtl:mr-2 font-semibold`}>{row.name}</span>
+            <Avatar icon={<FiUser />} />
+            <span className="ml-2 rtl:mr-2 font-semibold">
+                {row.firstName} {row.lastName}
+            </span>
         </div>
     )
 }
 
 const UserTable = () => {
     const tableRef = useRef<DataTableResetHandle>(null)
+    const [searchTerm, setSearchTerm] = useState('')
+    const [pagination, setPagination] = useState({
+        page: 1,
+        limit: 10,
+    })
+    
+    const { data: response, isLoading, error, refetch } = useQuery({
+        queryKey: ['users', pagination.page, pagination.limit, searchTerm],
+        queryFn: () => fetchUser({
+            page: pagination.page,
+            limit: pagination.limit,
+            search: searchTerm
+        }),
+    })
 
-    const dispatch = useAppDispatch()
-
-    const { pageIndex, pageSize, sort, query, total } = useAppSelector(
-        (state) => state.salesProductList.data.tableData,
-    )
-
-    const filterData = useAppSelector(
-        (state) => state.salesProductList.data.filterData,
-    )
-
-    const loading = useAppSelector(
-        (state) => state.salesProductList.data.loading,
-    )
-
-    const data = useAppSelector(
-        (state) => state.salesProductList.data.productList,
-    )
-
-    useEffect(() => {
-        fetchData()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pageIndex, pageSize, sort])
-
-    useEffect(() => {
-        if (tableRef) {
-            tableRef.current?.resetSorting()
+    // Update your fetchUser function in api.ts to accept params:
+    /*
+    export const fetchUser = async (params?: {
+        page?: number
+        limit?: number
+        search?: string
+    }) => {
+        try {
+            const response = await BaseService.get("/user", { params })
+            return response.data
+        } catch (error) {
+            console.log(error)
+            throw error
         }
-    }, [filterData])
+    }
+    */
 
-    const tableData = useMemo(
-        () => ({ pageIndex, pageSize, sort, query, total }),
-        [pageIndex, pageSize, sort, query, total],
-    )
-
-    const fetchData = () => {
-        dispatch(getProducts({ pageIndex, pageSize, sort, query, filterData }))
+    const users = response?.data?.users || []
+    const paginationData = response?.data?.pagination || {
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false
     }
 
-    const columns: ColumnDef<Product>[] = useMemo(
+    const debouncedSearch = useMemo(
+        () => debounce((value: string) => {
+            setSearchTerm(value)
+            setPagination(prev => ({ ...prev, page: 1 })) // Reset to first page on search
+        }, 500),
+        []
+    )
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        debouncedSearch(e.target.value)
+    }
+
+    const columns: ColumnDef<User>[] = useMemo(
         () => [
             {
                 header: 'Name',
                 accessorKey: 'name',
-                cell: (props) => {
-                    const row = props.row.original
-                    return <ProductColumn row={row} />
-                },
+                cell: (props) => <UserColumn row={props.row.original} />,
             },
             {
-                header: 'Category',
-                accessorKey: 'category',
-                cell: (props) => {
-                    const row = props.row.original
-                    return <span className="capitalize">{row.category}</span>
-                },
+                header: 'Email',
+                accessorKey: 'email',
+                cell: (props) => <span>{props.row.original.email}</span>,
             },
             {
-                header: 'Quantity',
-                accessorKey: 'stock',
-                sortable: true,
+                header: 'Phone Number',
+                accessorKey: 'phoneNumbers',
+                cell: (props) => (
+                    <span>{props.row.original.phoneNumbers?.[0] || 'N/A'}</span>
+                ),
+            },
+            {
+                header: 'Role',
+                accessorKey: 'role',
+                cell: (props) => (
+                    <span className="capitalize">{props.row.original.role}</span>
+                ),
             },
             {
                 header: 'Status',
-                accessorKey: 'status',
+                accessorKey: 'isActive',
                 cell: (props) => {
-                    const { status } = props.row.original
+                    const isActive = props.row.original.isActive
+                    const status = userStatusColor[isActive.toString() as keyof typeof userStatusColor]
                     return (
                         <div className="flex items-center gap-2">
-                            <Badge
-                                className={
-                                    inventoryStatusColor[status].dotClass
-                                }
-                            />
-                            <span
-                                className={`capitalize font-semibold ${inventoryStatusColor[status].textClass}`}
-                            >
-                                {inventoryStatusColor[status].label}
+                            <Badge className={status.dotClass} />
+                            <span className={`capitalize font-semibold ${status.textClass}`}>
+                                {status.label}
                             </span>
                         </div>
                     )
                 },
             },
             {
-                header: 'Price',
-                accessorKey: 'price',
-                cell: (props) => {
-                    const { price } = props.row.original
-                    return <span>${price}</span>
-                },
-            },
-            {
-                header: '',
+                header: 'Action',
                 id: 'action',
                 cell: (props) => <ActionColumn row={props.row.original} />,
             },
         ],
-        [],
+        []
     )
 
     const onPaginationChange = (page: number) => {
-        const newTableData = cloneDeep(tableData)
-        newTableData.pageIndex = page
-        dispatch(setTableData(newTableData))
+        setPagination(prev => ({ ...prev, page }))
     }
 
-    const onSelectChange = (value: number) => {
-        const newTableData = cloneDeep(tableData)
-        newTableData.pageSize = Number(value)
-        newTableData.pageIndex = 1
-        dispatch(setTableData(newTableData))
+    const onSelectChange = (limit: number) => {
+        setPagination(prev => ({ page: 1, limit })) // Reset to first page when changing page size
     }
 
-    const onSort = (sort: OnSortParam) => {
-        const newTableData = cloneDeep(tableData)
-        newTableData.sort = sort
-        dispatch(setTableData(newTableData))
+    if (error) {
+        return <div>Error loading users: {(error as Error).message}</div>
     }
 
     return (
         <>
+            <div className="mb-4">
+                <Input
+                    placeholder="Search users..."
+                    onChange={handleSearchChange}
+                    className="max-w-md"
+                />
+            </div>
+            
             <DataTable
                 ref={tableRef}
                 columns={columns}
-                data={data}
+                data={users}
                 skeletonAvatarColumns={[0]}
                 skeletonAvatarProps={{ className: 'rounded-md' }}
-                loading={loading}
+                loading={isLoading}
                 pagingData={{
-                    total: tableData.total as number,
-                    pageIndex: tableData.pageIndex as number,
-                    pageSize: tableData.pageSize as number,
+                    total: paginationData.total,
+                    pageIndex: paginationData.page,
+                    pageSize: paginationData.limit,
                 }}
                 onPaginationChange={onPaginationChange}
                 onSelectChange={onSelectChange}
-                onSort={onSort}
             />
             <UserDeleteConfirmation />
         </>
