@@ -1,69 +1,42 @@
-import toast from '@/components/ui/toast'
-import Notification from '@/components/ui/Notification'
-import { useNavigate } from 'react-router-dom'
-import { addClient } from '../api/api'
-import { useRef } from 'react'
-import ClientForm from '../Clientform'
-import { FormikProps } from 'formik'
+import { useNavigate } from 'react-router-dom';
+import ClientForm, { FormModel, SetSubmitting } from '@/views/client/Clientform';
+import { createClient } from '../api/api';
+import toast from '@/components/ui/toast';
+import Notification from '@/components/ui/Notification';
 
 const ClientNew = () => {
-    const navigate = useNavigate()
-    const formikRef = useRef<FormikProps<any>>(null)
+    const navigate = useNavigate();
 
-    const handleFormSubmit = async (
-        values: any,
-        setSubmitting: (isSubmitting: boolean) => void
-    ) => {
-        setSubmitting(true)
+    // ✅ Ensure the prop name matches EXACTLY (`onFormSubmit`)
+    const onFormSubmit = async (values: FormModel, setSubmitting: SetSubmitting) => {
+        setSubmitting(true);
         try {
-            const response:any = await addClient(values)
-            if(response.status === 201) {
+            const response = await createClient(values);
+            if (response.status === 201) {
                 toast.push(
-                    <Notification
-                        title={'Successfully added client'}
-                        type="success"
-                        duration={2500}
-                    >
-                        Client successfully added
-                    </Notification>,
-                    {
-                        placement: 'top-center',
-                    }
-                )
-                navigate('/app/client-list')
+                    <Notification title="Success!" type="success" />,
+                    { placement: 'top-center' }
+                );
+                navigate('/app/client-list');
             }
-        } catch (error: any) {
+        } catch (error) {
             toast.push(
-                <Notification
-                    title={'Error'}
-                    type="danger"
-                    duration={2500}
-                >
-                    {error.message || 'Failed to add client'}
-                </Notification>,
-                {
-                    placement: 'top-center',
-                }
-            )
+                <Notification title="Error!" type="danger" />,
+                { placement: 'top-center' }
+            );
         } finally {
-            setSubmitting(false)
+            setSubmitting(false);
         }
-    }
+    };
 
-    const handleDiscard = () => {
-        navigate('/app/client-list')
-    }
-
+    // ✅ Pass ALL required props
     return (
-        <>
-            <ClientForm
-                type="new"
-                onFormSubmit={handleFormSubmit}
-                onDiscard={handleDiscard}
-                ref={formikRef}
-            />
-        </>
-    )
-}
+        <ClientForm
+            type="new"  // ✅ Required
+            onFormSubmit={onFormSubmit}  // ✅ Must match
+            onDiscard={() => navigate('/app/client-list')}  // ✅ Optional but recommended
+        />
+    );
+};
 
-export default ClientNew
+export default ClientNew;

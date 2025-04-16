@@ -1,18 +1,20 @@
 import BaseService from "@/services/BaseService"
 
-export const addClient=async(values:any)=>{
+export const createClient = async (values: any) => {
     try {
-        //http://localhost:4000/api/user/login
-        const response=await BaseService.post("/client",values);
-        return response;
-    } catch (error) {
-        console.log(error);        
-        return error;
-
+        const response = await BaseService.post("/client", values)
+        console.log("response:",response);
+        
+        return response
+    } catch (error: any) {
+        if (error.response && error.response.data) {
+            throw new Error(error.response.data.message || 'Failed to create client')
+        }
+        throw new Error('Failed to create client')
     }
 }
 
-export const fetchClient = async (params?: {
+export const fetchClients = async (params?: {
     page?: number
     limit?: number
     search?: string

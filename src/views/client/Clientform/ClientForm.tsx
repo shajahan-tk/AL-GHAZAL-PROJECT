@@ -1,228 +1,248 @@
-import { forwardRef, useState } from 'react'
+import { forwardRef } from 'react'
 import { FormContainer, FormItem } from '@/components/ui/Form'
 import Button from '@/components/ui/Button'
-import hooks from '@/components/ui/hooks'
 import StickyFooter from '@/components/shared/StickyFooter'
-import ConfirmDialog from '@/components/shared/ConfirmDialog'
-import { Field, Form, Formik, FormikProps, FieldProps } from 'formik'
+import { Field, Form, Formik, FormikProps } from 'formik'
 import cloneDeep from 'lodash/cloneDeep'
-import { HiOutlineTrash } from 'react-icons/hi'
 import { AiOutlineSave } from 'react-icons/ai'
 import * as Yup from 'yup'
 import { Input } from '@/components/ui'
 import { AdaptableCard } from '@/components/shared'
-import useUniqueId from '@/components/ui/hooks/useUniqueId'
 
 type FormikRef = FormikProps<any>
 
+// Helper function for Yup validation errors
+const yupToFormErrors = (yupError: any) => {
+  const errors: Record<string, string> = {}
+  yupError.inner.forEach((error: any) => {
+    errors[error.path] = error.message
+  })
+  return errors
+}
+
 const validationSchema = Yup.object().shape({
-    clientName: Yup.string().required('Client Name Required'),
-    clientAddress: Yup.string().required('Address Required'),
-    mobileNumber: Yup.string()
-        .required('Mobile Number Required')
-        .matches(/^[0-9]+$/, 'Must be only digits')
-        .min(10, 'Must be at least 10 digits'),
-    telephoneNumber: Yup.string()
-        .matches(/^[0-9]+$/, 'Must be only digits')
-        .min(10, 'Must be at least 10 digits'),
-    trnNumber: Yup.string().required('TRN Number Required'),
-    pincode: Yup.string()
-        .required('Pincode Required')
-        .length(6, 'Must be exactly 6 digits')
+  clientName: Yup.string().required('Client Name Required'),
+  clientAddress: Yup.string().required('Client Address Required'),
+  pincode: Yup.string()
+    .required('Pincode Required')
+    .matches(/^[0-9]+$/, 'Pincode must be numeric'),
+  mobileNumber: Yup.string()
+    .required('Mobile Number Required')
+    .matches(/^[0-9]+$/, 'Mobile number must be digits only'),
+  telephoneNumber: Yup.string()
+    .matches(/^[0-9]+$/, 'Telephone number must be digits only')
+    .nullable(),
+  trnNumber: Yup.string()
+    .required('TRN Number Required')
+    .matches(/^[0-9]+$/, 'TRN must be digits only'),
 })
 
 type InitialData = {
-    clientName?: string
-    clientAddress?: string
-    mobileNumber?: string
-    telephoneNumber?: string
-    trnNumber?: string
-    pincode?: string
+  clientName?: string
+  clientAddress?: string
+  pincode?: string
+  mobileNumber?: string
+  telephoneNumber?: string | null
+  trnNumber?: string
 }
 
-export type FormModel = Omit<InitialData, 'tags'> & {
-    tags: { label: string; value: string }[] | string[]
-}
+export type FormModel = InitialData
 
 export type SetSubmitting = (isSubmitting: boolean) => void
 
-export type OnDeleteCallback = React.Dispatch<React.SetStateAction<boolean>>
-
-type OnDelete = (callback: OnDeleteCallback) => void
-
 type ClientFormProps = {
-    initialData?: InitialData
-    type: 'edit' | 'new'
-    onDiscard?: () => void
-    onDelete?: OnDelete
-    onFormSubmit: (formData: FormModel, setSubmitting: SetSubmitting) => void
+  initialData?: InitialData
+  type: 'edit' | 'new'
+  onDiscard?: () => void
+  onDelete?: () => void
+  onFormSubmit: (formData: FormModel, setSubmitting: SetSubmitting) => void
 }
 
 const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
     const {
         type,
         initialData = {
-            clientName: '',
-            clientAddress: '',
-            mobileNumber: '',
-            telephoneNumber: '',
-            trnNumber: '',
-            pincode: ''
+          clientName: '',
+          clientAddress: '',
+          pincode: '',
+          mobileNumber: '',
+          telephoneNumber: null,
+          trnNumber: '',
         },
         onFormSubmit,
         onDiscard,
         onDelete,
-    } = props
+      } = props
+    
+    
+   
+  return (
+    <Formik
+      innerRef={ref}
+      initialValues={{
+        ...initialData,
+      }}
+      validationSchema={validationSchema}
+      onSubmit={(values: FormModel, { setSubmitting }) => {
+        console.log('Formik onSubmit - values:', values)
+        const formData = cloneDeep(values)
+        onFormSubmit(formData, setSubmitting)
+      }}
+      validateOnBlur={true}
+      validateOnChange={false}
+      validate={(values) => {
+        console.log('Validating values:', values)
+        try {
+          validationSchema.validateSync(values, { abortEarly: false })
+          console.log('Validation passed')
+          return {}
+        } catch (err) {
+          console.log('Validation errors:', err)
+          return yupToFormErrors(err)
+        }
+      }}
+    >
+      {({ values, touched, errors, isSubmitting, handleSubmit }) => {
+        console.log('Formik render - errors:', errors)
+        return (
+          <Form onSubmit={handleSubmit}>
+            <FormContainer>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2">
+                  <FormItem
+                    label="Client Name"
+                    invalid={!!(errors.clientName && touched.clientName)}
+                    errorMessage={errors.clientName}
+                  >
+                    <Field
+                      type="text"
+                      autoComplete="off"
+                      name="clientName"
+                      placeholder="Client Name"
+                      component={Input}
+                    />
+                  </FormItem>
 
-    const newId = useUniqueId('client-')
+                  <FormItem
+                    label="Client Address"
+                    invalid={!!(errors.clientAddress && touched.clientAddress)}
+                    errorMessage={errors.clientAddress}
+                  >
+                    <Field
+                      as="textarea"
+                      autoComplete="off"
+                      name="clientAddress"
+                      placeholder="Client Address"
+                      component={Input}
+                      textArea
+                    />
+                  </FormItem>
 
-    return (
-        <>
-            <Formik
-                innerRef={ref}
-                initialValues={{
-                    ...initialData,
-                }}
-                validationSchema={validationSchema}
-                onSubmit={(values: FormModel, { setSubmitting }) => {
-                    const formData = cloneDeep(values)
-                    onFormSubmit?.(formData, setSubmitting)
-                }}
-            >
-                {({ values, touched, errors, isSubmitting }) => (
-                    <Form>
-                        <FormContainer>
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                                <div className="lg:col-span-2">
-                                    <FormItem
-                                        label="Client Name"
-                                        invalid={(errors.clientName && touched.clientName) as boolean}
-                                        errorMessage={errors.clientName}
-                                    >
-                                        <Field
-                                            type="text"
-                                            autoComplete="off"
-                                            name="clientName"
-                                            placeholder="Client Name"
-                                            component={Input}
-                                        />
-                                    </FormItem>
-                                    <FormItem
-                                        label="Address"
-                                        invalid={(errors.clientAddress && touched.clientAddress) as boolean}
-                                        errorMessage={errors.clientAddress}
-                                    >
-                                        <Field
-                                            type="text"
-                                            autoComplete="off"
-                                            name="clientAddress"
-                                            placeholder="Address"
-                                            component={Input}
-                                            textArea
-                                        />
-                                    </FormItem>
-                                    <div className="md:grid grid-cols-2 gap-4">
-                                        <FormItem
-                                            label="Mobile Number"
-                                            invalid={(errors.mobileNumber && touched.mobileNumber) as boolean}
-                                            errorMessage={errors.mobileNumber}
-                                        >
-                                            <Field
-                                                type="text"
-                                                autoComplete="off"
-                                                name="mobileNumber"
-                                                placeholder="Mobile Number"
-                                                component={Input}
-                                            />
-                                        </FormItem>
-                                        <FormItem
-                                            label="Telephone Number"
-                                            invalid={(errors.telephoneNumber && touched.telephoneNumber) as boolean}
-                                            errorMessage={errors.telephoneNumber}
-                                        >
-                                            <Field
-                                                type="text"
-                                                autoComplete="off"
-                                                name="telephoneNumber"
-                                                placeholder="Telephone Number"
-                                                component={Input}
-                                            />
-                                        </FormItem>
-                                    </div>
-                                    <div className="md:grid grid-cols-2 gap-4">
-                                        <FormItem
-                                            label="TRN Number"
-                                            invalid={(errors.trnNumber && touched.trnNumber) as boolean}
-                                            errorMessage={errors.trnNumber}
-                                        >
-                                            <Field
-                                                type="text"
-                                                autoComplete="off"
-                                                name="trnNumber"
-                                                placeholder="TRN Number"
-                                                component={Input}
-                                            />
-                                        </FormItem>
-                                        <FormItem
-                                            label="Pincode"
-                                            invalid={(errors.pincode && touched.pincode) as boolean}
-                                            errorMessage={errors.pincode}
-                                        >
-                                            <Field
-                                                type="text"
-                                                autoComplete="off"
-                                                name="pincode"
-                                                placeholder="Pincode"
-                                                component={Input}
-                                            />
-                                        </FormItem>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <StickyFooter
-                                className="-mx-8 px-8 flex items-center justify-between py-4"
-                                stickyClass="border-t bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                            >
-                                <div>
-                                    {type === 'edit' && (
-                                        <Button
-                                            size="sm"
-                                            variant="plain"
-                                            type="button"
-                                            icon={<HiOutlineTrash />}
-                                            onClick={() => onDelete?.((prev) => !prev)}
-                                        >
-                                            Delete
-                                        </Button>
-                                    )}
-                                </div>
-                                <div className="md:flex items-center">
-                                    <Button
-                                        size="sm"
-                                        className="ltr:mr-3 rtl:ml-3"
-                                        type="button"
-                                        onClick={() => onDiscard?.()}
-                                    >
-                                        Discard
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="solid"
-                                        loading={isSubmitting}
-                                        icon={<AiOutlineSave />}
-                                        type="submit"
-                                    >
-                                        Save
-                                    </Button>
-                                </div>
-                            </StickyFooter>
-                        </FormContainer>
-                    </Form>
-                )}
-            </Formik>
-        </>
-    )
+                  <div className="md:grid grid-cols-2 gap-4">
+                    <FormItem
+                      label="Pincode"
+                      invalid={!!(errors.pincode && touched.pincode)}
+                      errorMessage={errors.pincode}
+                    >
+                      <Field
+                        type="text"
+                        autoComplete="off"
+                        name="pincode"
+                        placeholder="Pincode"
+                        component={Input}
+                      />
+                    </FormItem>
+
+                    <FormItem
+                      label="TRN Number"
+                      invalid={!!(errors.trnNumber && touched.trnNumber)}
+                      errorMessage={errors.trnNumber}
+                    >
+                      <Field
+                        type="text"
+                        autoComplete="off"
+                        name="trnNumber"
+                        placeholder="TRN Number"
+                        component={Input}
+                      />
+                    </FormItem>
+                  </div>
+
+                  <div className="md:grid grid-cols-2 gap-4">
+                    <FormItem
+                      label="Mobile Number"
+                      invalid={!!(errors.mobileNumber && touched.mobileNumber)}
+                      errorMessage={errors.mobileNumber}
+                    >
+                      <Field
+                        type="text"
+                        autoComplete="off"
+                        name="mobileNumber"
+                        placeholder="Mobile Number"
+                        component={Input}
+                      />
+                    </FormItem>
+
+                    <FormItem
+                      label="Telephone Number"
+                      invalid={!!(errors.telephoneNumber && touched.telephoneNumber)}
+                      errorMessage={errors.telephoneNumber}
+                    >
+                      <Field
+                        type="text"
+                        autoComplete="off"
+                        name="telephoneNumber"
+                        placeholder="Telephone Number"
+                        component={Input}
+                      />
+                    </FormItem>
+                  </div>
+                </div>
+              </div>
+
+              <StickyFooter
+                className="-mx-8 px-8 flex items-center justify-between py-4"
+                stickyClass="border-t bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+              >
+                <div>
+                  {type === 'edit' && onDelete && (
+                    <Button
+                      size="sm"
+                      variant="solid"
+                      color="red"
+                      type="button"
+                      onClick={onDelete}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </div>
+                <div className="md:flex items-center">
+                  <Button
+                    size="sm"
+                    className="ltr:mr-3 rtl:ml-3"
+                    type="button"
+                    onClick={onDiscard}
+                  >
+                    Discard
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="solid"
+                    loading={isSubmitting}
+                    icon={<AiOutlineSave />}
+                    type="submit"
+                  >
+                    Save
+                  </Button>
+                </div>
+              </StickyFooter>
+            </FormContainer>
+          </Form>
+        )
+      }}
+    </Formik>
+  )
 })
 
 ClientForm.displayName = 'ClientForm'

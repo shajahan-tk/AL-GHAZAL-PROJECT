@@ -86,6 +86,9 @@ const UserForm = forwardRef<FormikRef, UserForm>((props, ref) => {
         onDelete,
     } = props
 
+    console.log(props);
+    
+
     const newId = useUniqueId('product-')
 
     return (
