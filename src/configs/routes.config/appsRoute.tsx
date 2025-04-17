@@ -52,6 +52,12 @@ const appsRoute: Routes = [
         component: lazy(() => import('@/views/client/ClientNew/ClientNew')),
         authority: [ADMIN, USER],
     },
+    {
+        key: 'appsProjectNew.projectNew',
+        path: `${APP_PREFIX_PATH}/project-new`,
+        component: lazy(() => import('@/views/projectNew/ProjectNew/ProjectForm')),
+        authority: [ADMIN, USER],
+    },
     
     
 ]

@@ -14,7 +14,7 @@ const ClientNew = () => {
             const response = await createClient(values);
             if (response.status === 201) {
                 toast.push(
-                    <Notification title="Success!" type="success" />,
+                    <Notification title="Client Created Successfully " type="success" />,
                     { placement: 'top-center' }
                 );
                 navigate('/app/client-list');

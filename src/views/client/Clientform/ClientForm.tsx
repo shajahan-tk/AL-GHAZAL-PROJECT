@@ -25,7 +25,7 @@ const validationSchema = Yup.object().shape({
   clientAddress: Yup.string().required('Client Address Required'),
   pincode: Yup.string()
     .required('Pincode Required')
-    .matches(/^[0-9]+$/, 'Pincode must be numeric'),
+    .matches(/^[0-9]+$/, 'Pincode must be numeric').min(6).max(6),
   mobileNumber: Yup.string()
     .required('Mobile Number Required')
     .matches(/^[0-9]+$/, 'Mobile number must be digits only'),
@@ -33,8 +33,8 @@ const validationSchema = Yup.object().shape({
     .matches(/^[0-9]+$/, 'Telephone number must be digits only')
     .nullable(),
   trnNumber: Yup.string()
-    .required('TRN Number Required')
-    .matches(/^[0-9]+$/, 'TRN must be digits only'),
+    .required('TRN Number Required'),
+   
 })
 
 type InitialData = {

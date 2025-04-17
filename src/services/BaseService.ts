@@ -25,7 +25,7 @@ BaseService.interceptors.request.use(
         //     accessToken = auth.session.token
         // }
 
-        let accessToken="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2ZmNTU1N2Y2MmFhODgxMzRmMTFiOTAiLCJlbWFpbCI6InN1cGVyYWRtaW5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3VwZXJfYWRtaW4iLCJpYXQiOjE3NDQ4MTIwMzUsImV4cCI6MTc0NTQxNjgzNX0.QiZvZ21ZE9_zHQWVJdPVUsM3huVuaJyawm-jxAzClOA" as string;
+        let accessToken="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2ZmNTZlYjlhZTk2NTZjODAxNTk3MWEiLCJlbWFpbCI6InN1cGVyYWRtaW5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3VwZXJfYWRtaW4iLCJpYXQiOjE3NDQ4MjkxMTIsImV4cCI6MTc0NTQzMzkxMn0.pmI5b4nHimi_saRpWIYZliYzZgFioTSshWyKwoKbcG8" as string;
         if (accessToken) {
             config.headers[REQUEST_HEADER_AUTH_KEY] =
                 `${TOKEN_TYPE}${accessToken}`
