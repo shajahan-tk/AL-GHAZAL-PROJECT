@@ -41,9 +41,6 @@ interface ITermsItem {
 
 interface InitialData {
   _id?: string;
-  clientName: string;
-  clientAddress: string;
-  workDescription: string;
   dateOfEstimation: Date;
   workStartDate: Date;
   workEndDate: Date;
@@ -70,9 +67,6 @@ type EstimationFormProps = {
 };
 
 const validationSchema = Yup.object().shape({
-  clientName: Yup.string().required('Client Name is required'),
-  clientAddress: Yup.string().required('Client Address is required'),
-  workDescription: Yup.string().required('Work Description is required'),
   dateOfEstimation: Yup.date().required('Estimation Date is required'),
   workStartDate: Yup.date()
     .required('Work Start Date is required')
@@ -128,9 +122,6 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
   const navigate = useNavigate();
   const { id } = useParams();
   const [initialValues, setInitialValues] = useState<FormModel>({
-    clientName: '',
-    clientAddress: '',
-    workDescription: '',
     dateOfEstimation: new Date(),
     workStartDate: new Date(),
     workEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -295,69 +286,12 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
           <Form>
             <FormContainer>
               <AdaptableCard divider className="mb-4">
-                <h5>Client & Work Details</h5>
+                <h5>Work Details</h5>
                 <p className="mb-6">Section to configure client and work information</p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormItem
-                    label="Client Name *"
-                    invalid={!!errors.clientName && touched.clientName}
-                    errorMessage={errors.clientName}
-                  >
-                    <Field
-                      type="text"
-                      name="clientName"
-                      placeholder="Client Name"
-                      component={Input}
-                    />
-                  </FormItem>
+                
 
-                  <FormItem
-                    label="Estimation Date *"
-                    invalid={!!errors.dateOfEstimation && touched.dateOfEstimation}
-                    errorMessage={errors.dateOfEstimation as string}
-                  >
-                    <Field name="dateOfEstimation">
-                      {({ field, form }: any) => (
-                        <DatePicker
-                          placeholder="Select date"
-                          value={field.value}
-                          onChange={(date) => {
-                            form.setFieldValue(field.name, date);
-                          }}
-                        />
-                      )}
-                    </Field>
-                  </FormItem>
-                </div>
-
-                <FormItem
-                  label="Client Address *"
-                  invalid={!!errors.clientAddress && touched.clientAddress}
-                  errorMessage={errors.clientAddress}
-                >
-                  <Field
-                    as="textarea"
-                    name="clientAddress"
-                    placeholder="Client Address"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-[#1f2937] dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                    rows={2}
-                  />
-                </FormItem>
-
-                <FormItem
-                  label="Work Description *"
-                  invalid={!!errors.workDescription && touched.workDescription}
-                  errorMessage={errors.workDescription}
-                >
-                  <Field
-                    as="textarea"
-                    name="workDescription"
-                    placeholder="Describe the work to be done"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-[#1f2937] dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                    rows={3}
-                  />
-                </FormItem>
+                
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <FormItem
@@ -837,16 +771,29 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
                     Discard
                   </Button>
                 </div>
-                <div className="md:flex items-center">
+                <div className='md:flex grid-2 gap-2'>
+                <div className="md:flex ">
                   <Button
                     size="sm"
                     variant="solid"
                     loading={isSubmitting}
                     type="submit"
                   >
-                    {id ? 'Update Estimation' : 'Create Estimation'}
+                    {id ? 'Update Estimation' : 'Save'}
                   </Button>
                 </div>
+                <div className="md:flex">
+                  <Button
+                    size="sm"
+                    variant="solid"
+                    loading={isSubmitting}
+                    type="submit"
+                  >
+                    {id ? 'Update Estimation' : 'Completed'}
+                  </Button>
+                </div>
+                </div>
+               
               </StickyFooter>
             </FormContainer>
           </Form>

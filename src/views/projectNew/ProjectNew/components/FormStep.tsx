@@ -6,9 +6,10 @@ type FormStepProps = {
   currentStep: number
   steps: { label: string; value: number }[]
   onStepChange: (step: number) => void
+  completed:number
 }
 
-const FormStep = ({ currentStep, steps, onStepChange }: FormStepProps) => {
+const FormStep = ({ currentStep, steps, onStepChange,completed }: FormStepProps) => {
   const { textTheme } = useThemeClass()
 
   return (
@@ -17,24 +18,27 @@ const FormStep = ({ currentStep, steps, onStepChange }: FormStepProps) => {
         <Menu.MenuItem
           key={step.value}
           eventKey={step.value.toString()}
-          className="mb-2"
+          className={`mb-2 ${step.value <= currentStep ? 'cursor-pointer' : 'cursor-not-allowed'}`}
           isActive={currentStep === step.value}
           onSelect={() => {
-            if (step.value <= currentStep) {
+            // Allow navigation to any completed step or current step
+            if (step.value <= completed) {
               onStepChange(step.value)
             }
           }}
         >
           <span className="text-2xl ltr:mr-2 rtl:ml-2">
-            {step.value < currentStep && <HiCheckCircle className={textTheme} />}
-            {step.value === currentStep && (
-              <HiCheckCircle className="text-gray-400" />
+            {step.value < completed && <HiCheckCircle className={textTheme} />}
+            {step.value === completed && (
+              <HiCheckCircle className={textTheme} />
             )}
-            {step.value > currentStep && (
+            {step.value > completed && (
               <HiLockClosed className="text-gray-400" />
             )}
           </span>
-          <span>{step.label}</span>
+          <span className={step.value > completed ? 'text-gray-400' : ''}>
+            {step.label}
+          </span>
         </Menu.MenuItem>
       ))}
     </Menu>

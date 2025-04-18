@@ -1,6 +1,15 @@
 import { Card } from '@/components/ui'
 import Button from '@/components/ui/Button'
 import DoubleSidedImage from '@/components/shared/DoubleSidedImage'
+type  ClientData ={
+  _id:string;
+  clientName:string;
+  clientAddress: string
+  pincode: string
+  mobileNumber: string
+  telephoneNumber: string | null
+  trnNumber: string
+}
 
 type FormData = {
   clientName: string
@@ -8,6 +17,8 @@ type FormData = {
   projectDescription: string
   siteAddress: string
   siteLocation: string
+  clientData:ClientData
+
 }
 
 type ProjectReviewProps = {
@@ -29,6 +40,27 @@ const ProjectReview = ({ data, onBack, onSubmit }: ProjectReviewProps) => {
               <div>
                 <p className="text-gray-500">Client Name</p>
                 <p className="font-semibold">{data.clientName || 'Not provided'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Client Address</p>
+                <p className="font-semibold">{data?.clientData?.clientAddress || 'Not provided'}</p>
+              </div>
+             
+              <div>
+                <p className="text-gray-500">Pincode</p>
+                <p className="font-semibold">{data?.clientData?.pincode || 'Not provided'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Mobile Number</p>
+                <p className="font-semibold">{data?.clientData?.mobileNumber || 'Not provided'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Telephone Number</p>
+                <p className="font-semibold">{data?.clientData?.telephoneNumber || 'Not provided'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Trn Number</p>
+                <p className="font-semibold">{data?.clientData?.trnNumber || 'Not provided'}</p>
               </div>
             </div>
           </div>

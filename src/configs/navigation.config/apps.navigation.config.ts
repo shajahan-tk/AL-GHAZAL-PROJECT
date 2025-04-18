@@ -151,16 +151,16 @@ const appsNavigationConfig: NavigationTree[] = [
                         authority: [ADMIN, USER],
                         subMenu: [],
                     },
-                    // {
-                    //     key: 'appsClients.ClientNew',
-                    //     path: `${APP_PREFIX_PATH}/client-new`,
-                    //     title: 'Client New',
-                    //     translateKey: 'nav.appsClients.ClientNew',
-                    //     icon: '',
-                    //     type: NAV_ITEM_TYPE_ITEM,
-                    //     authority: [ADMIN, USER],
-                    //     subMenu: [],
-                    // },
+                    {
+                        key: 'appsProjectList.ProjectList',
+                        path: `${APP_PREFIX_PATH}/project-list`,
+                        title: 'Project List',
+                        translateKey: 'nav.appsProjectList.ProjectList',
+                        icon: '',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [ADMIN, USER],
+                        subMenu: [],
+                    },
                   
                     
                 ],

@@ -2,56 +2,58 @@ import { useState } from 'react'
 import Container from '@/components/shared/Container'
 import AdaptableCard from '@/components/shared/AdaptableCard'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import axios, { AxiosResponse } from 'axios'
 import { FormStep } from './components/FormStep'
 import { PersonalInformation } from './components/PersonalInformation'
 import ProjectReview from './components/ProjectReview'
 import ProjectInformation from './components/ProjectInformation'
 import AddressInformation from './components/AddressInformation'
+import { createProject } from '../api/api'
+import { Notification, toast } from '@/components/ui'
+
+type  ClientData ={
+  _id:string;
+  clientName:string;
+  clientAddress: string
+  pincode: string
+  mobileNumber: string
+  telephoneNumber: string | null
+  trnNumber: string
+}
 
 type FormData = {
   clientName: string
   projectName: string
   projectDescription: string
-  country: string
-  addressLine1: string
-  addressLine2: string
-  city: string
-  state: string
-  zipCode: string
-  sameCorrespondenceAddress: boolean
-  correspondenceAddress: {
-    country: string
-    addressLine1: string
-    addressLine2: string
-    city: string
-    state: string
-    zipCode: string
-  }
+  siteAddress: string
+  siteLocation: string
+  clientData:ClientData
+
 }
+
 
 const ProjectForm = () => {
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState(0)
+  const [completedSteps, setCompletedSteps] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState<FormData>({
     clientName: '',
     projectName: '',
-    projectDescription: '',
-    country: '',
-    addressLine1: '',
-    addressLine2: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    sameCorrespondenceAddress: true,
-    correspondenceAddress: {
-      country: '',
-      addressLine1: '',
-      addressLine2: '',
-      city: '',
-      state: '',
-      zipCode: ''
+    projectDescription:'',
+    siteAddress: '',
+    siteLocation:'',
+    clientData:{
+      _id:"",
+      clientName:"",
+      clientAddress:"", 
+      pincode:"", 
+      mobileNumber:"", 
+      telephoneNumber:"",  
+      trnNumber:"", 
     }
+   
   })
 
   const steps = [
@@ -74,6 +76,7 @@ const ProjectForm = () => {
       // If we're on the last form step (Address Information), go to review
       setCurrentStep(currentStep + 1)
     }
+    setCompletedSteps(currentStep+1);
     
     setSubmitting?.(false)
   }
@@ -82,15 +85,57 @@ const ProjectForm = () => {
     setCurrentStep(prev => Math.max(0, prev - 1))
   }
 
+  // const handleSubmit = async () => {
+  //   try {
+  //     const response = await createProject()
+  //     console.log('Project created:', response.data)
+  //     navigate('/projects')
+  //   } catch (error) {
+  //     console.error('Error submitting form:', error)
+  //   }
+  // }
+
+
   const handleSubmit = async () => {
+    setIsSubmitting(true)
+    setError(null)
+    
     try {
-      const response = await axios.post('/api/projects', formData)
-      console.log('Project created:', response.data)
-      navigate('/projects')
+      const response:AxiosResponse = await createProject({
+        client:formData.clientData._id,
+        projectDescription:formData.projectDescription,
+        projectName:formData.projectName,
+        siteAddress:formData.siteAddress,
+        siteLocation:formData.siteLocation
+      })
+
+      if(response.status===201){
+        //on second callila,ini cheythok, on run cheyy setttttttt mahn
+        console.log('Project creatd:', response.data)
+        toast.push(
+          <Notification
+              title={'Successfuly created project'}
+              type="success"
+              duration={2500}
+          >
+              Project successfuly created
+          </Notification>,
+          {
+              placement: 'top-center',
+          },
+      )
+        navigate(-1)
+      }
+     
     } catch (error) {
       console.error('Error submitting form:', error)
+      setError('Failed to create project. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
+  
+
 
   return (
     <Container className="h-full">
@@ -101,6 +146,7 @@ const ProjectForm = () => {
               currentStep={currentStep}
               steps={steps}
               onStepChange={setCurrentStep}
+              completed={completedSteps}
             />
           </div>
           <div className="2xl:col-span-4 lg:col-span-3 xl:col-span-2">
