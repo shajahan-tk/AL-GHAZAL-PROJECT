@@ -113,18 +113,18 @@ const SignInForm = (props: SignInFormProps) => {
                                     component={PasswordInput}
                                 />
                             </FormItem>
-                            <div className="flex justify-between mb-6">
-                                <Field
+                            {/* <div className="flex justify-between mb-6"> */}
+                                {/* <Field
                                     className="mb-0"
                                     name="rememberMe"
                                     component={Checkbox}
                                 >
                                     Remember Me
-                                </Field>
-                                <ActionLink to={forgotPasswordUrl}>
+                                </Field> */}
+                                {/* <ActionLink to={forgotPasswordUrl}>
                                     Forgot Password?
-                                </ActionLink>
-                            </div>
+                                </ActionLink> */}
+                            {/* </div> */}
                             <Button
                                 block
                                 loading={isSubmitting}
@@ -133,10 +133,10 @@ const SignInForm = (props: SignInFormProps) => {
                             >
                                 {isSubmitting ? 'Signing in...' : 'Sign In'}
                             </Button>
-                            <div className="mt-4 text-center">
+                            {/* <div className="mt-4 text-center">
                                 <span>{`Don't have an account yet?`} </span>
                                 <ActionLink to={signUpUrl}>Sign up</ActionLink>
-                            </div>
+                            </div> */}
                         </FormContainer>
                     </Form>
                 )}

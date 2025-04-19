@@ -6,8 +6,8 @@ import { Form, Formik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import toast from '@/components/ui/toast';
 import Notification from '@/components/ui/Notification';
-import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 import { BASE_URL } from '@/constants/app.constant';
 import AdaptableCard from '@/components/shared/AdaptableCard';
 import Input from '@/components/ui/Input';
@@ -15,11 +15,12 @@ import { FormItem } from '@/components/ui/Form';
 import { Field, FieldArray, FormikErrors, FormikTouched } from 'formik';
 import { HiOutlineTrash, HiOutlinePlus } from 'react-icons/hi';
 import DatePicker from '@/components/ui/DatePicker';
+import { createEstimation } from '../api/api';
 
 type FormikRef = FormikProps<any>;
 
 interface IMaterialItem {
-  subjectMaterial: string;
+  description: string;
   quantity: number;
   unitPrice: number;
   total: number;
@@ -27,13 +28,13 @@ interface IMaterialItem {
 
 interface ILabourItem {
   designation: string;
-  quantityDays: number;
+  days: number;
   price: number;
   total: number;
 }
 
 interface ITermsItem {
-  miscellaneous: string;
+  description: string;
   quantity: number;
   unitPrice: number;
   total: number;
@@ -45,7 +46,7 @@ interface InitialData {
   workStartDate: Date;
   workEndDate: Date;
   validUntil: Date;
-  paymentDueBy: Date;
+  paymentDueBy: number;
   status: string;
   estimationNumber?: string;
   materials: IMaterialItem[];
@@ -77,11 +78,11 @@ const validationSchema = Yup.object().shape({
   validUntil: Yup.date()
     .required('Valid Until Date is required')
     .min(Yup.ref('dateOfEstimation'), 'Valid Until Date cannot be before Estimation Date'),
-  paymentDueBy: Yup.date().required('Payment Due Date is required'),
+  paymentDueBy: Yup.string().required('Payment Due  is required'),
   status: Yup.string().required('Status is required'),
   materials: Yup.array().of(
     Yup.object().shape({
-      subjectMaterial: Yup.string().required('Material name is required'),
+      description: Yup.string().required('Material name is required'),
       quantity: Yup.number()
         .required('Quantity is required')
         .min(0, 'Quantity must be positive'),
@@ -93,7 +94,7 @@ const validationSchema = Yup.object().shape({
   labourCharges: Yup.array().of(
     Yup.object().shape({
       designation: Yup.string().required('Designation is required'),
-      quantityDays: Yup.number()
+      days: Yup.number()
         .required('Days is required')
         .min(0, 'Days must be positive'),
       price: Yup.number()
@@ -103,7 +104,7 @@ const validationSchema = Yup.object().shape({
   ),
   termsAndConditions: Yup.array().of(
     Yup.object().shape({
-      miscellaneous: Yup.string().required('Description is required'),
+      description: Yup.string().required('Description is required'),
       quantity: Yup.number()
         .required('Quantity is required')
         .min(0, 'Quantity must be positive'),
@@ -120,7 +121,9 @@ const validationSchema = Yup.object().shape({
 const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) => {
   const { onDiscard } = props;
   const navigate = useNavigate();
-  const { id } = useParams();
+  
+  const {state:projectId}=useLocation()
+  
   const [initialValues, setInitialValues] = useState<FormModel>({
     dateOfEstimation: new Date(),
     workStartDate: new Date(),
@@ -129,88 +132,80 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
     paymentDueBy: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
     status: 'Draft',
     materials: [
-      { subjectMaterial: '', quantity: 0, unitPrice: 0, total: 0 },
+      { description: '', quantity: 0, unitPrice: 0, total: 0 },
     ],
     labourCharges: [
-      { designation: '', quantityDays: 0, price: 0, total: 0 },
+      { designation: '', days: 0, price: 0, total: 0 },
     ],
     termsAndConditions: [
-      { miscellaneous: '', quantity: 0, unitPrice: 0, total: 0 },
+      { description: '', quantity: 0, unitPrice: 0, total: 0 },
     ],
     estimatedAmount: 0,
     preparedByName: '',
     checkedByName: '',
     approvedByName: '',
   });
-  const [isLoading, setIsLoading] = useState(!!id);
+  // const [isLoading, setIsLoading] = useState(!!id);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      const fetchEstimation = async () => {
-        try {
-          const response = await axios.get(`${BASE_URL}/estimation/${id}`);
-          const estimation = response.data.data;
-          
-          setInitialValues({
-            ...estimation,
-            dateOfEstimation: new Date(estimation.dateOfEstimation),
-            workStartDate: new Date(estimation.workStartDate),
-            workEndDate: new Date(estimation.workEndDate),
-            validUntil: new Date(estimation.validUntil),
-            paymentDueBy: new Date(estimation.paymentDueBy),
-          });
-        } catch (error) {
-          console.error('Error fetching estimation:', error);
-          toast.push(
-            <Notification title="Error" type="danger" duration={2500}>
-              Failed to load estimation data
-            </Notification>,
-            { placement: 'top-center' }
-          );
-          navigate('/estimations/list');
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      
-      fetchEstimation();
-    }
-  }, [id, navigate]);
+   
+  }, [ navigate]);
 
   const handleFormSubmit = async (values: FormModel) => {
+    
     try {
-      const endpoint = id 
-        ? `${BASE_URL}/estimation/${id}` 
-        : `${BASE_URL}/estimation`;
+          const response:AxiosResponse = await createEstimation({
+            project:projectId,
+            paymentDueBy:values.paymentDueBy,
+            termsAndConditions:values.termsAndConditions,
+            validUntil:values.validUntil,
+            materials:values.materials,
+            labour:values.labourCharges,
+            workEndDate:values.workEndDate,
+            workStartDate:values.workStartDate,
+            commissionAmount:values.commissionAmount,
+            quotationAmount:values.quotationAmount
+            })
+            console.log(response);
+            
       
-      const method = id ? 'put' : 'post';
-
-      const response = await axios[method](endpoint, values);
-
-      if (response.status !== (id ? 200 : 201)) {
-        throw new Error(`Failed to ${id ? 'update' : 'create'} estimation`);
-      }
 
       toast.push(
         <Notification 
-          title={`Estimation ${id ? 'Updated' : 'Created'}`} 
+          title={`Estimation Created`} 
           type="success" 
           duration={2500}
         >
-          Estimation {id ? 'updated' : 'created'} successfully.
+          Estimation created successfully.
         </Notification>,
         { placement: 'top-center' }
       );
 
       navigate('/app/estimation-list');
     } catch (error) {
-      console.error(`Error ${id ? 'updating' : 'creating'} estimation:`, error);
-      toast.push(
-        <Notification title="Error" type="danger" duration={2500}>
-          Failed to {id ? 'update' : 'create'} estimation. Please try again.
-        </Notification>,
-        { placement: 'top-center' }
-      );
+      console.error(`Error'} estimation:`, error);
+      if (error.status === 400){
+        toast.push(
+          <Notification 
+            title={`Not Created`} 
+            type="danger" 
+            duration={2500}
+          >
+           Only one estimation is allowed per project.
+          </Notification>,
+          { placement: 'top-center' }
+        );
+      }else{
+        toast.push(
+          <Notification title="Error" type="danger" duration={2500}>
+            Failed to estimation. Please try again.
+          </Notification>,
+          { placement: 'top-center' }
+        );
+      }
+
+      
     }
   };
 
@@ -243,7 +238,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
 
           // Calculate labour totals
           values.labourCharges.forEach((labour, index) => {
-            const total = parseFloat((labour.quantityDays * labour.price).toFixed(2));
+            const total = parseFloat((labour.days * labour.price).toFixed(2));
             if (labour.total !== total) {
               setFieldValue(`labourCharges[${index}].total`, total);
             }
@@ -259,7 +254,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
 
           // Calculate estimated amount
           const materialsTotal = values.materials.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-          const labourTotal = values.labourCharges.reduce((sum, item) => sum + (item.quantityDays * item.price), 0);
+          const labourTotal = values.labourCharges.reduce((sum, item) => sum + (item.days * item.price), 0);
           const termsTotal = values.termsAndConditions.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
           const estimatedAmount = parseFloat((materialsTotal + labourTotal + termsTotal).toFixed(2));
 
@@ -352,25 +347,20 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
                   </FormItem>
 
                   <FormItem
-                    label="Payment Due By *"
-                    invalid={!!errors.paymentDueBy && touched.paymentDueBy}
-                    errorMessage={errors.paymentDueBy as string}
-                  >
-                    <Field name="paymentDueBy">
-                      {({ field, form }: any) => (
-                        <DatePicker
-                          placeholder="Select date"
-                          value={field.value}
-                          onChange={(date) => {
-                            form.setFieldValue(field.name, date);
-                          }}
-                        />
-                      )}
-                    </Field>
-                  </FormItem>
+  label="Payment Due By *"
+  invalid={!!errors.paymentDueBy && touched.paymentDueBy}
+  errorMessage={errors.paymentDueBy as string}
+>
+  <Field
+    type="number"
+    name="paymentDueBy"
+    placeholder="paymentDueBy"
+    component={Input}
+  />
+</FormItem>
                 </div>
 
-                {id && (
+                {/* {id && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormItem label="Estimation Number">
                       <Input
@@ -397,7 +387,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
                       </Field>
                     </FormItem>
                   </div>
-                )}
+                )} */}
               </AdaptableCard>
 
               <AdaptableCard divider className="mb-4">
@@ -411,12 +401,12 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
                         <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end border-b pb-4">
                           <FormItem
                             label={`Material ${index + 1}`}
-                            invalid={!!errors.materials?.[index]?.subjectMaterial && touched.materials?.[index]?.subjectMaterial}
-                            errorMessage={errors.materials?.[index]?.subjectMaterial}
+                            invalid={!!errors.materials?.[index]?.description && touched.materials?.[index]?.description}
+                            errorMessage={errors.materials?.[index]?.description}
                           >
                             <Field
                               type="text"
-                              name={`materials[${index}].subjectMaterial`}
+                              name={`materials[${index}].description`}
                               placeholder="Material name"
                               component={Input}
                             />
@@ -480,7 +470,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
                         size="sm"
                         variant="twoTone"
                         icon={<HiOutlinePlus />}
-                        onClick={() => push({ subjectMaterial: '', quantity: 0, unitPrice: 0, total: 0 })}
+                        onClick={() => push({ description: '', quantity: 0, unitPrice: 0, total: 0 })}
                       >
                         Add Material
                       </Button>
@@ -513,12 +503,12 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
 
                           <FormItem
                             label="Days"
-                            invalid={!!errors.labourCharges?.[index]?.quantityDays && touched.labourCharges?.[index]?.quantityDays}
-                            errorMessage={errors.labourCharges?.[index]?.quantityDays}
+                            invalid={!!errors.labourCharges?.[index]?.days && touched.labourCharges?.[index]?.days}
+                            errorMessage={errors.labourCharges?.[index]?.days}
                           >
                             <Field
                               type="number"
-                              name={`labourCharges[${index}].quantityDays`}
+                              name={`labourCharges[${index}].days`}
                               placeholder="Days"
                               component={Input}
                               min={0}
@@ -569,7 +559,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
                         size="sm"
                         variant="twoTone"
                         icon={<HiOutlinePlus />}
-                        onClick={() => push({ designation: '', quantityDays: 0, price: 0, total: 0 })}
+                        onClick={() => push({ designation: '', days: 0, price: 0, total: 0 })}
                       >
                         Add Labour Charge
                       </Button>
@@ -589,12 +579,12 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
                         <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end border-b pb-4">
                           <FormItem
                             label={`Description ${index + 1}`}
-                            invalid={!!errors.termsAndConditions?.[index]?.miscellaneous && touched.termsAndConditions?.[index]?.miscellaneous}
-                            errorMessage={errors.termsAndConditions?.[index]?.miscellaneous}
+                            invalid={!!errors.termsAndConditions?.[index]?.description && touched.termsAndConditions?.[index]?.description}
+                            errorMessage={errors.termsAndConditions?.[index]?.description}
                           >
                             <Field
                               type="text"
-                              name={`termsAndConditions[${index}].miscellaneous`}
+                              name={`termsAndConditions[${index}].description`}
                               placeholder="Description"
                               component={Input}
                             />
@@ -658,7 +648,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
                         size="sm"
                         variant="twoTone"
                         icon={<HiOutlinePlus />}
-                        onClick={() => push({ miscellaneous: '', quantity: 0, unitPrice: 0, total: 0 })}
+                        onClick={() => push({ description: '', quantity: 0, unitPrice: 0, total: 0 })}
                       >
                         Add Term
                       </Button>
@@ -773,14 +763,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
                 </div>
                 <div className='md:flex grid-2 gap-2'>
                 <div className="md:flex ">
-                  <Button
-                    size="sm"
-                    variant="solid"
-                    loading={isSubmitting}
-                    type="submit"
-                  >
-                    {id ? 'Update Estimation' : 'Save'}
-                  </Button>
+                  
                 </div>
                 <div className="md:flex">
                   <Button
@@ -789,7 +772,8 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
                     loading={isSubmitting}
                     type="submit"
                   >
-                    {id ? 'Update Estimation' : 'Completed'}
+                    {/* {id ? 'Update Estimation' : 'Completed'} */}
+                    Save
                   </Button>
                 </div>
                 </div>
