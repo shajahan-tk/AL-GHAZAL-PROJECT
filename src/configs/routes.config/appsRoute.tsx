@@ -1,6 +1,6 @@
 import { lazy } from 'react'
 import { APP_PREFIX_PATH } from '@/constants/route.constant'
-import { ADMIN, USER } from '@/constants/roles.constant'
+import { ADMIN, ENGINEER, USER } from '@/constants/roles.constant'
 import type { Routes } from '@/@types/routes'
 
 const appsRoute: Routes = [
@@ -8,7 +8,7 @@ const appsRoute: Routes = [
         key: 'apps.dashboard',
         path: `${APP_PREFIX_PATH}/dashboard`,
         component: lazy(() => import('@/views/project/ProjectDashboard')),
-        authority: [ADMIN, USER],
+        authority: [ADMIN, USER,ENGINEER],
     },
     {
         key: 'appsEstimation.estimationList',
@@ -68,6 +68,18 @@ const appsRoute: Routes = [
         key: 'appsProjectView.ProjectView',
         path: `${APP_PREFIX_PATH}/project-view/:id`,
         component: lazy(() => import('@/views/ProjectView/ProjectView/Wallets')),
+        authority: [ADMIN, USER],
+    },
+    {
+        key: 'appsQuotation.quotationNew',
+        path: `${APP_PREFIX_PATH}/quotation-new`,
+        component: lazy(() => import('@/views/quotation/quotationcreation/QuotationCreations')),
+        authority: [ADMIN, USER],
+    },
+    {
+        key: 'appsQuotationView.QuotationView',
+        path: `${APP_PREFIX_PATH}/quotation-view`,
+        component: lazy(() => import('@/views/quotation/quotationview/QuotationView')),
         authority: [ADMIN, USER],
     },
     

@@ -165,6 +165,40 @@ const appsNavigationConfig: NavigationTree[] = [
                     
                 ],
             },
+            {
+                key: 'apps.quotation',
+                path: '',
+                title: 'quotation',
+                translateKey: 'nav.appsQuotation.quotation',
+                icon: 'crm',
+                type: NAV_ITEM_TYPE_COLLAPSE,
+                authority: [ADMIN, USER],
+                subMenu: [
+                    
+                    {
+                        key: 'appsQuotation.quotationNew',
+                        path: `${APP_PREFIX_PATH}/quotation-new`,
+                        title: 'New Quotation',
+                        translateKey: 'nav.appsQuotation.quotationNew',
+                        icon: '',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [ADMIN, USER],
+                        subMenu: [],
+                    },
+                    {
+                        key: 'appsQuotationView.QuotationView',
+                        path: `${APP_PREFIX_PATH}/quotation-view`,
+                        title: 'Quotation View',
+                        translateKey: 'nav.appsQuotationView.QuotationView',
+                        icon: '',
+                        type: NAV_ITEM_TYPE_ITEM,
+                        authority: [ADMIN, USER],
+                        subMenu: [],
+                    },
+                  
+                    
+                ],
+            },
         ],
     },
 ]

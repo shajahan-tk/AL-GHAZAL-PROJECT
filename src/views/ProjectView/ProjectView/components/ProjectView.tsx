@@ -26,7 +26,7 @@ interface Document {
     status?: string
     icon: string
     exists: boolean
-    route:string
+    route: string
 }
 
 const DocumentCard = ({ 
@@ -37,11 +37,23 @@ const DocumentCard = ({
     onAddClick: (type: string) => void 
 }) => {
     const { textTheme } = useThemeClass()
+    const navigate = useNavigate()
+
+    const handleClick = () => {
+        if (data.exists) {
+            navigate(data.route, { state: { projectId: id } })
+        } else {
+            onAddClick(data.type)
+        }
+    }
 
     return (
         <Card>
             {data.exists ? (
-                <div className="flex flex-col h-full">
+                <div 
+                    className="flex flex-col h-full cursor-pointer" 
+                    onClick={handleClick}
+                >
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                             <Avatar size={40} src={data.icon} />
@@ -73,7 +85,7 @@ const DocumentCard = ({
                 <Card
                     clickable
                     className="border-dashed border-2 hover:border-indigo-600 hover:dark:border-gray-300 bg-transparent h-full flex items-center justify-center"
-                    onClick={() => onAddClick(data.type)}
+                    onClick={handleClick}
                 >
                     <div className="flex flex-col justify-center items-center py-5">
                         <div className="p-4 rounded-full bg-gray-50 dark:bg-gray-600">
@@ -91,7 +103,7 @@ const ProjectView = () => {
     const { id } = useParams()
     const [loading, setLoading] = useState(false)
     const [documents, setDocuments] = useState<Document[]>([])
-    const navigate=useNavigate()
+    const navigate = useNavigate()
     const [projectData, setProjectData] = useState<any>(null)
     const [projectLoading, setProjectLoading] = useState(false)
     const [projectError, setProjectError] = useState<any>(null)
@@ -111,31 +123,28 @@ const ProjectView = () => {
                     date: '2023-05-15',
                     status: 'Approved',
                     icon: '/img/document-icons/estimate.png',
-                    route:"/create-estimation",
-                    exists: false // Change to false to see the "Add" version
+                    route: "/app/create-estimation",
+                    exists: false
                 },
                 {
                     type: 'quotation',
                     title: 'Quotation',
                     icon: '/img/document-icons/quotation.png',
-                    route:"/create-estimation",
-
+                    route: "/app/quotation-new",
                     exists: false
                 },
                 {
                     type: 'invoice',
                     title: 'Invoice',
                     icon: '/img/document-icons/invoice.png',
-                    route:"/create-estimation",
-
+                    route: "/app/invoices/new",
                     exists: false
                 },
                 {
                     type: 'workReport',
                     title: 'Work Report',
                     icon: '/img/document-icons/report.png',
-                    route:"/create-estimation",
-
+                    route: "/app/work-reports/new",
                     exists: false
                 }
             ]
@@ -157,10 +166,13 @@ const ProjectView = () => {
     }, [id])
 
     const handleAddDocument = (type: string) => {
-        navigate("/app/create-estimation",{state:id})
+        const document = documents.find(doc => doc.type === type)
+        if (document) {
+            navigate(document.route, { state: { projectId: id } })
+        }
         toast.push(
             <Notification 
-                title={`Add ${type} clicked`} 
+                title={`Creating new ${type}`} 
                 type="info" 
                 duration={2000} 
             />,
@@ -168,7 +180,6 @@ const ProjectView = () => {
                 placement: 'top-center',
             },
         )
-        // Here you would typically open a modal or navigate to create the document
     }
 
     return (

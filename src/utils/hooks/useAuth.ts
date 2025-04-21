@@ -11,6 +11,7 @@ import { REDIRECT_URL_KEY } from '@/constants/app.constant'
 import { useNavigate } from 'react-router-dom'
 import useQuery from './useQuery'
 import type { SignInCredential, SignUpCredential } from '@/@types/auth'
+import axios from 'axios'
 
 type Status = 'success' | 'failed'
 
@@ -23,78 +24,94 @@ function useAuth() {
 
     const signIn = async (
         values: SignInCredential,
-    ): Promise<
-        | {
-              status: Status
-              message: string
-          }
-        | undefined
-    > => {
+    ): Promise<{ status: Status; message: string }> => {
         try {
-            // Check if credentials match the allowed admin credentials
-            if (values.userName !== 'admin' || values.password !== 'hitech@Eng') {
-                return {
-                    status: 'failed',
-                    message: 'Invalid credentials',
-                }
+            // Make API request
+            const response = await axios.post('http://localhost:4000/api/user/login', {
+                email: values.userName.includes('@') ? values.userName : `${values.userName}@yourdomain.com`,
+                password: values.password
+            });
+            console.log(response);
+            
+
+            if (response.status===200) {
+                const { user, token } = response?.data?.data;
+                
+                // Store tokens and user data in localStorage
+                localStorage.setItem('authToken', token);
+                localStorage.setItem('user', JSON.stringify(user));
+                
+                // Update Redux state
+                dispatch(signInSuccess(token));
+                dispatch(setUser({
+                    avatar: user?.avatar || '/img/avatars/thumb-1.png',
+                    userName: user?.name || user?.email, // Use name if available
+                    authority: user?.role ? [user.role] : ['user'], // Default role
+                    email: user?.email,
+                }));
+
+                // Redirect to dashboard or intended URL
+                const redirectUrl = query.get(REDIRECT_URL_KEY);
+                navigate(redirectUrl || appConfig.authenticatedEntryPath);
+
+                return { status: 'success', message: 'Login successful' };
             }
-
-            // Define admin user details
-            const adminUser = {
-                avatar: '/img/avatars/thumb-1.png',
-                userName: 'AL GHAZAL Admin',
-                authority: ['admin', 'user'],
-                email: 'admin@hitech.com',
-            }
-
-            const adminToken = 'wVYrxaeNa9OxdnULvde1Au5m5w63'
-
-            dispatch(signInSuccess(adminToken))
-            dispatch(setUser(adminUser))
-
-            const redirectUrl = query.get(REDIRECT_URL_KEY)
-            navigate(
-                redirectUrl
-                    ? redirectUrl
-                    : appConfig.authenticatedEntryPath,
-            )
-
-            return {
-                status: 'success',
-                message: '',
-            }
-        } catch (errors: any) {
+            
+            return { status: 'failed', message: response.data.message || 'Login failed' };
+        } catch (error: any) {
+            console.error('Login error:', error);
             return {
                 status: 'failed',
-                message: errors?.response?.data?.message || errors.toString(),
-            }
+                message: error.response?.data?.message || 'Login failed. Please try again.',
+            };
         }
     }
 
     const signUp = async (values: SignUpCredential) => {
-        // Disable signup functionality
-        return {
-            status: 'failed',
-            message: 'Signup is disabled. Please use admin@hitech.com with password hitech@Eng to sign in',
+        try {
+            const response = await axios.post('http://localhost:4000/api/user/register', values);
+            if (response.data.success) {
+                return {
+                    status: 'success',
+                    message: 'Registration successful. Please login.',
+                };
+            }
+            return {
+                status: 'failed',
+                message: response.data.message || 'Registration failed',
+            };
+        } catch (error: any) {
+            return {
+                status: 'failed',
+                message: error.response?.data?.message || 'Registration failed. Please try again.',
+            }
         }
     }
 
     const handleSignOut = () => {
-        dispatch(signOutSuccess())
-        dispatch(
-            setUser({
-                avatar: '',
-                userName: '',
-                email: '',
-                authority: [],
-            }),
-        )
-        navigate(appConfig.unAuthenticatedEntryPath)
+        // Clear localStorage
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        
+        // Update Redux state
+        dispatch(signOutSuccess());
+        dispatch(setUser({
+            avatar: '',
+            userName: '',
+            email: '',
+            authority: [],
+        }));
+        
+        // Redirect to login page
+        navigate(appConfig.unAuthenticatedEntryPath);
     }
 
     const signOut = async () => {
-        await apiSignOut()
-        handleSignOut()
+        try {
+            await apiSignOut();
+        } finally {
+            handleSignOut();
+        }
     }
 
     return {
