@@ -61,7 +61,7 @@ const ActionColumn = ({ row }: { row: Project }) => {
     const navigate = useNavigate()
 
     const onEdit = () => {
-        navigate(`/app/projects/project-edit/${row._id}`)
+        navigate(`/app/project-edit/${row._id}`)
     }
     const onView = () => {
         navigate(`/app/project-view/${row?._id}`)

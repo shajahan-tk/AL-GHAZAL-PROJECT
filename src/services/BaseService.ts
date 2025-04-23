@@ -14,18 +14,18 @@ const BaseService = axios.create({
 
 BaseService.interceptors.request.use(
     (config) => {
-        // const rawPersistData = localStorage.getItem(PERSIST_STORE_NAME)
-        // const persistData = deepParseJson(rawPersistData)
+        const rawPersistData = localStorage.getItem(PERSIST_STORE_NAME)
+        const persistData = deepParseJson(rawPersistData)
 
-        // // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        // let accessToken = (persistData as any).auth.session.token
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let accessToken = (persistData as any).auth.session.token
 
-        // if (!accessToken) {
-        //     const { auth } = store.getState()
-        //     accessToken = auth.session.token
-        // }
+        if (!accessToken) {
+            const { auth } = store.getState()
+            accessToken = auth.session.token
+        }
 
-        let accessToken="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2ZmNTZlYjlhZTk2NTZjODAxNTk3MWEiLCJlbWFpbCI6InN1cGVyYWRtaW5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3VwZXJfYWRtaW4iLCJpYXQiOjE3NDQ4MjkxMTIsImV4cCI6MTc0NTQzMzkxMn0.pmI5b4nHimi_saRpWIYZliYzZgFioTSshWyKwoKbcG8" as string;
+      
         if (accessToken) {
             config.headers[REQUEST_HEADER_AUTH_KEY] =
                 `${TOKEN_TYPE}${accessToken}`

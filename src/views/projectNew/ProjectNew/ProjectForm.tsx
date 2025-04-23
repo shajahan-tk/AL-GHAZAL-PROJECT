@@ -1,14 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Container from '@/components/shared/Container'
 import AdaptableCard from '@/components/shared/AdaptableCard'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import axios, { AxiosResponse } from 'axios'
 import { FormStep } from './components/FormStep'
 import { PersonalInformation } from './components/PersonalInformation'
 import ProjectReview from './components/ProjectReview'
 import ProjectInformation from './components/ProjectInformation'
 import AddressInformation from './components/AddressInformation'
-import { createProject } from '../api/api'
+import { createProject, editProject, fetchProjectById } from '../api/api'
 import { Notification, toast } from '@/components/ui'
 
 type  ClientData ={
@@ -34,6 +34,7 @@ type FormData = {
 
 const ProjectForm = () => {
   const navigate = useNavigate()
+  const {id}=useParams()
   const [currentStep, setCurrentStep] = useState(0)
   const [completedSteps, setCompletedSteps] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -76,7 +77,7 @@ const ProjectForm = () => {
       // If we're on the last form step (Address Information), go to review
       setCurrentStep(currentStep + 1)
     }
-    setCompletedSteps(currentStep+1);
+    setCompletedSteps(prev=>prev>(currentStep+1)?prev:currentStep+1);
     
     setSubmitting?.(false)
   }
@@ -99,26 +100,24 @@ const ProjectForm = () => {
   const handleSubmit = async () => {
     setIsSubmitting(true)
     setError(null)
-    
-    try {
-      const response:AxiosResponse = await createProject({
+    if(id){
+      const response:AxiosResponse = await editProject(id,{
         client:formData.clientData._id,
         projectDescription:formData.projectDescription,
         projectName:formData.projectName,
         siteAddress:formData.siteAddress,
         siteLocation:formData.siteLocation
       })
-
-      if(response.status===201){
-        //on second callila,ini cheythok, on run cheyy setttttttt mahn
-        console.log('Project creatd:', response.data)
+      if(response.status===200){
+       
+        console.log('Project Updated:', response.data)
         toast.push(
           <Notification
-              title={'Successfuly created project'}
+              title={'Successfuly Updated project'}
               type="success"
               duration={2500}
           >
-              Project successfuly created
+              Project successfuly Updated
           </Notification>,
           {
               placement: 'top-center',
@@ -126,15 +125,69 @@ const ProjectForm = () => {
       )
         navigate(-1)
       }
-     
-    } catch (error) {
-      console.error('Error submitting form:', error)
-      setError('Failed to create project. Please try again.')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+    }else{
+      try {
+        const response:AxiosResponse = await createProject({
+          client:formData.clientData._id,
+          projectDescription:formData.projectDescription,
+          projectName:formData.projectName,
+          siteAddress:formData.siteAddress,
+          siteLocation:formData.siteLocation
+        })
   
+        if(response.status===201){
+          //on second callila,ini cheythok, on run cheyy setttttttt mahn
+          console.log('Project creatd:', response.data)
+          toast.push(
+            <Notification
+                title={'Successfuly created project'}
+                type="success"
+                duration={2500}
+            >
+                Project successfuly created
+            </Notification>,
+            {
+                placement: 'top-center',
+            },
+        )
+          navigate(-1)
+        }
+       
+      } catch (error) {
+        console.error('Error submitting form:', error)
+        setError('Failed to create project. Please try again.')
+      } finally {
+        setIsSubmitting(false)
+      }
+    }
+   
+  }
+  const fetchProject=async()=>{
+    const {data}=await fetchProjectById(id);
+    setFormData({
+      clientData:{
+        _id:data?.client?._id,
+        clientName:data?.client?.clientName,
+        clientAddress:data?.client?.clientAddress,
+        mobileNumber:data?.client?.mobileNumber,
+        telephoneNumber:data?.client?.telephoneNumber,
+        trnNumber:data?.client?.trnNumber,
+        pincode:data?.client?.pincode,
+      },
+      projectName:data?.projectName,
+      projectDescription:data?.projectDescription,
+      siteAddress:data?.siteAddress,
+      siteLocation:data?.siteLocation,
+      clientName:data?.client?.clientName
+    })
+    setCompletedSteps(3);
+    setCurrentStep(3);
+}  
+  useEffect(()=>{
+    if (id) {
+      fetchProject()
+    }
+  },[])
 
 
   return (

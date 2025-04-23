@@ -51,3 +51,25 @@ export const deleteClient = async (id: string) => {
         throw error
     }
 }
+
+export const fetchClientById = async (id: string) => {
+    try {
+        const response = await BaseService.get(`/client/${id}`)
+        return response.data
+    } catch (error) {
+        console.error('Error fetching client:', error)
+        throw error
+    }
+}
+
+export const editClient = async (id: string, values: any) => {
+    try {
+        const response = await BaseService.put(`/client/${id}`, values)
+        return response
+    } catch (error) {
+        console.error('Error editing client:', error)
+        throw error
+    }
+}
+
+    

@@ -46,3 +46,30 @@ type EstimationApi={
           throw error
       }
   }
+
+
+
+    export const fetchEstimation = async (id:string) => {
+    try {
+        console.log("id:",id);
+        
+        const response = await BaseService.get(`/estimation/${id}`)
+        console.log(response)
+        return response.data
+
+    } catch (error) {
+        console.log(error)
+        throw error
+    }
+}
+
+export const editEstimation = async (id: string, values: EstimationApi) => {
+    try {
+        const response = await BaseService.put(`/estimation/${id}`, values);
+        return response.data;
+    } catch (error) {
+        console.error('Error editing Estimation:', error);
+        throw error;
+    }
+}
+

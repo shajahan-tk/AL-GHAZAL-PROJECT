@@ -199,7 +199,7 @@ const ProjectDashboard = () => {
     }, [])
 
     const fetchData = () => {
-        dispatch(getProjectDashboardData())
+        // dispatch(getProjectDashboardData())
     }
 
     return (

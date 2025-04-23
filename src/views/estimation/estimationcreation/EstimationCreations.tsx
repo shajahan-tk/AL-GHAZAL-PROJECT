@@ -6,16 +6,16 @@ import { Form, Formik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import toast from '@/components/ui/toast';
 import Notification from '@/components/ui/Notification';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import axios, { AxiosError, AxiosResponse } from 'axios';
-import { BASE_URL } from '@/constants/app.constant';
+import { useLocation, useNavigate } from 'react-router-dom';
 import AdaptableCard from '@/components/shared/AdaptableCard';
 import Input from '@/components/ui/Input';
 import { FormItem } from '@/components/ui/Form';
-import { Field, FieldArray, FormikErrors, FormikTouched } from 'formik';
+import { Field, FieldArray } from 'formik';
 import { HiOutlineTrash, HiOutlinePlus } from 'react-icons/hi';
 import DatePicker from '@/components/ui/DatePicker';
-import { createEstimation } from '../api/api';
+import { createEstimation, fetchEstimation, editEstimation } from '../api/api';
+import { APP_PREFIX_PATH } from '@/constants/route.constant';
+import { log } from 'util';
 
 type FormikRef = FormikProps<any>;
 
@@ -56,9 +56,7 @@ interface InitialData {
   quotationAmount?: number;
   commissionAmount?: number;
   profit?: number;
-  preparedByName: string;
-  checkedByName: string;
-  approvedByName: string;
+  project?: string;
 }
 
 export type FormModel = InitialData;
@@ -78,7 +76,7 @@ const validationSchema = Yup.object().shape({
   validUntil: Yup.date()
     .required('Valid Until Date is required')
     .min(Yup.ref('dateOfEstimation'), 'Valid Until Date cannot be before Estimation Date'),
-  paymentDueBy: Yup.string().required('Payment Due  is required'),
+  paymentDueBy: Yup.string().required('Payment Due is required'),
   status: Yup.string().required('Status is required'),
   materials: Yup.array().of(
     Yup.object().shape({
@@ -113,23 +111,25 @@ const validationSchema = Yup.object().shape({
         .min(0, 'Unit price must be positive'),
     })
   ),
-  preparedByName: Yup.string().required('Prepared by is required'),
-  checkedByName: Yup.string().required('Checked by is required'),
-  approvedByName: Yup.string().required('Approved by is required'),
 });
 
 const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) => {
   const { onDiscard } = props;
   const navigate = useNavigate();
+  const { state } = useLocation();
   
-  const {state:projectId}=useLocation()
+  // Get projectId or estimationId from location state
+  const projectId = state;
+  console.log("hi state",state);
   
+  const estimationId = state?.estimationId;
+
   const [initialValues, setInitialValues] = useState<FormModel>({
     dateOfEstimation: new Date(),
     workStartDate: new Date(),
     workEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    paymentDueBy: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+    paymentDueBy: '',
     status: 'Draft',
     materials: [
       { description: '', quantity: 0, unitPrice: 0, total: 0 },
@@ -141,71 +141,144 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
       { description: '', quantity: 0, unitPrice: 0, total: 0 },
     ],
     estimatedAmount: 0,
-    preparedByName: '',
-    checkedByName: '',
-    approvedByName: '',
   });
-  // const [isLoading, setIsLoading] = useState(!!id);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(!!estimationId);
 
   useEffect(() => {
-   
-  }, [ navigate]);
+    const fetchEstimationData = async () => {
+      if (estimationId) {
+        try {
+          const response = await fetchEstimation(estimationId);
+          const estimation = response.data;
+          
+          setInitialValues({
+            dateOfEstimation: new Date(estimation.createdAt),
+            workStartDate: new Date(estimation.workStartDate),
+            workEndDate: new Date(estimation.workEndDate),
+            validUntil: new Date(estimation.validUntil),
+            paymentDueBy: estimation.paymentDueBy.toString(),
+            status: estimation.status || 'Draft',
+            materials: estimation.materials.map(m => ({
+              description: m.description,
+              quantity: m.quantity,
+              unitPrice: m.unitPrice,
+              total: m.total,
+            })),
+            labourCharges: estimation.labour.map(l => ({
+              designation: l.designation,
+              days: l.days,
+              price: l.price,
+              total: l.total,
+            })),
+            termsAndConditions: estimation.termsAndConditions.map(t => ({
+              description: t.description,
+              quantity: t.quantity,
+              unitPrice: t.unitPrice,
+              total: t.total,
+            })),
+            estimatedAmount: estimation.estimatedAmount,
+            quotationAmount: estimation.quotationAmount,
+            commissionAmount: estimation.commissionAmount,
+            profit: estimation.profit,
+            project:estimation.project._id
+          });
+        } catch (error) {
+          console.error('Error fetching estimation:', error);
+          toast.push(
+            <Notification title="Error" type="danger" duration={2500}>
+              Failed to load estimation data.
+            </Notification>,
+            { placement: 'top-center' }
+          );
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchEstimationData();
+  }, [estimationId]);
 
   const handleFormSubmit = async (values: FormModel) => {
-    
     try {
-          const response:AxiosResponse = await createEstimation({
-            project:projectId,
-            paymentDueBy:values.paymentDueBy,
-            termsAndConditions:values.termsAndConditions,
-            validUntil:values.validUntil,
-            materials:values.materials,
-            labour:values.labourCharges,
-            workEndDate:values.workEndDate,
-            workStartDate:values.workStartDate,
-            commissionAmount:values.commissionAmount,
-            quotationAmount:values.quotationAmount
-            })
-            console.log(response);
-            
-      
-
-      toast.push(
-        <Notification 
-          title={`Estimation Created`} 
-          type="success" 
-          duration={2500}
-        >
-          Estimation created successfully.
-        </Notification>,
-        { placement: 'top-center' }
-      );
-
-      navigate('/app/estimation-list');
-    } catch (error) {
-      console.error(`Error'} estimation:`, error);
-      if (error.status === 400){
+      if (estimationId) {
+        // Edit existing estimation
+        await editEstimation(estimationId, {
+          project: values.project,
+          paymentDueBy: values.paymentDueBy,
+          termsAndConditions: values.termsAndConditions,
+          validUntil: values.validUntil,
+          materials: values.materials,
+          labour: values.labourCharges,
+          workEndDate: values.workEndDate,
+          workStartDate: values.workStartDate,
+          commissionAmount: values.commissionAmount,
+          quotationAmount: values.quotationAmount,
+          status: values.status
+        });
+        
         toast.push(
           <Notification 
-            title={`Not Created`} 
-            type="danger" 
+            title={`Estimation Updated`} 
+            type="success" 
             duration={2500}
           >
-           Only one estimation is allowed per project.
+            Estimation updated successfully.
           </Notification>,
           { placement: 'top-center' }
         );
-      }else{
+      } else {
+        // Create new estimation
+        
+        await createEstimation({
+          project: projectId,
+          paymentDueBy: values.paymentDueBy,
+          termsAndConditions: values.termsAndConditions,
+          validUntil: values.validUntil,
+          materials: values.materials,
+          labour: values.labourCharges,
+          workEndDate: values.workEndDate,
+          workStartDate: values.workStartDate,
+          commissionAmount: values.commissionAmount,
+          quotationAmount: values.quotationAmount,
+
+        });
+        
         toast.push(
-          <Notification title="Error" type="danger" duration={2500}>
-            Failed to estimation. Please try again.
+          <Notification 
+            title={`Estimation Created`} 
+            type="success" 
+            duration={2500}
+          >
+            Estimation created successfully.
           </Notification>,
           { placement: 'top-center' }
         );
       }
-
       
+      navigate(-1)
+    } catch (error: any) {
+      console.error(`Error ${estimationId ? 'updating' : 'creating'} estimation:`, error);
+      if (error?.status === 400) {
+        toast.push(
+          <Notification 
+            title={`Not ${estimationId ? 'Updated' : 'Created'}`} 
+            type="danger" 
+            duration={2500}
+          >
+            {estimationId ? 'Failed to update estimation' : 'Only one estimation is allowed per project.'}
+          </Notification>,
+          { placement: 'top-center' }
+        );
+      } else {
+        toast.push(
+          <Notification title="Error" type="danger" duration={2500}>
+            Failed to {estimationId ? 'update' : 'create'} estimation. Please try again.
+          </Notification>,
+          { placement: 'top-center' }
+        );
+      }
     }
   };
 
@@ -216,6 +289,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
       </div>
     );
   }
+
 
   return (
     <Formik
@@ -276,6 +350,8 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
           const { name, value } = e.target;
           setFieldValue(name, parseFloat(value) || 0);
         };
+
+        
 
         return (
           <Form>
@@ -705,46 +781,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormItem
-                    label="Prepared By *"
-                    invalid={!!errors.preparedByName && touched.preparedByName}
-                    errorMessage={errors.preparedByName}
-                  >
-                    <Field
-                      type="text"
-                      name="preparedByName"
-                      placeholder="Prepared by name"
-                      component={Input}
-                    />
-                  </FormItem>
-
-                  <FormItem
-                    label="Checked By *"
-                    invalid={!!errors.checkedByName && touched.checkedByName}
-                    errorMessage={errors.checkedByName}
-                  >
-                    <Field
-                      type="text"
-                      name="checkedByName"
-                      placeholder="Checked by name"
-                      component={Input}
-                    />
-                  </FormItem>
-
-                  <FormItem
-                    label="Approved By *"
-                    invalid={!!errors.approvedByName && touched.approvedByName}
-                    errorMessage={errors.approvedByName}
-                  >
-                    <Field
-                      type="text"
-                      name="approvedByName"
-                      placeholder="Approved by name"
-                      component={Input}
-                    />
-                  </FormItem>
-                </div>
+              
               </AdaptableCard>
 
               <StickyFooter
@@ -766,15 +803,14 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
                   
                 </div>
                 <div className="md:flex">
-                  <Button
-                    size="sm"
-                    variant="solid"
-                    loading={isSubmitting}
-                    type="submit"
-                  >
-                    {/* {id ? 'Update Estimation' : 'Completed'} */}
-                    Save
-                  </Button>
+                <Button
+    size="sm"
+    variant="solid"
+    loading={isSubmitting}
+    type="submit"
+  >
+    {estimationId ? 'Update Estimation' : 'Create Estimation'}
+  </Button>
                 </div>
                 </div>
                

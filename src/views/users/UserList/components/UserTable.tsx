@@ -12,10 +12,11 @@ import type {
     OnSortParam,
     ColumnDef,
 } from '@/components/shared/DataTable'
-import { fetchUser } from '../../api/api'
+
 import { useQuery } from '@tanstack/react-query'
 import debounce from 'lodash/debounce'
 import Input from '@/components/ui/Input'
+import { fetchUser } from '../../api/api'
 
 type User = {
     _id: string
@@ -58,7 +59,7 @@ const ActionColumn = ({ row }: { row: User }) => {
     const navigate = useNavigate()
 
     const onEdit = () => {
-        navigate(`/app/users/user-edit/${row._id}`)
+        navigate(`/app/user-form/${row._id}`) // Updated route
     }
 
     const onDelete = () => {

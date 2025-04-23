@@ -47,7 +47,7 @@ const ActionColumn = ({ row }: { row: Client }) => {
     const navigate = useNavigate()
 
     const onEdit = () => {
-        navigate(`/app/clients/client-edit/${row._id}`)
+        navigate(`/app/client-form/${row._id}`) // Updated route
     }
 
     const onDelete = () => {

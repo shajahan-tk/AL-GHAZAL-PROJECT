@@ -10,12 +10,13 @@ import Skeleton from '@/components/ui/Skeleton'
 import Loading from '@/components/shared/Loading'
 import GrowShrinkTag from '@/components/shared/GrowShrinkTag'
 import useThemeClass from '@/utils/hooks/useThemeClass'
-import { HiOutlineDuplicate, HiOutlinePlus } from 'react-icons/hi'
+import { HiOutlineDuplicate, HiOutlinePlus, HiOutlineEye } from 'react-icons/hi'
 import { NumericFormat } from 'react-number-format'
 import CustomerInfo from './CustomerInfo'
 import ProjectInfo from './ProjectInfo'
 import { useNavigate, useParams } from 'react-router-dom'
 import { fetchProject } from '../api/api'
+import Button from '@/components/ui/Button'
 
 // Define Document type
 interface Document {
@@ -27,6 +28,7 @@ interface Document {
     icon: string
     exists: boolean
     route: string
+    viewRoute?: string // New property for view route
 }
 
 const DocumentCard = ({ 
@@ -41,7 +43,8 @@ const DocumentCard = ({
 
     const handleClick = () => {
         if (data.exists) {
-            navigate(data.route, { state: { projectId: id } })
+            // Use viewRoute if it exists (for estimation view), otherwise use regular route
+            navigate(data.viewRoute || data.route, { state: { projectId: id } })
         } else {
             onAddClick(data.type)
         }
@@ -50,10 +53,7 @@ const DocumentCard = ({
     return (
         <Card>
             {data.exists ? (
-                <div 
-                    className="flex flex-col h-full cursor-pointer" 
-                    onClick={handleClick}
-                >
+                <div className="flex flex-col h-full">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                             <Avatar size={40} src={data.icon} />
@@ -78,6 +78,17 @@ const DocumentCard = ({
                         )}
                         {data.date && (
                             <p className="text-sm text-gray-500">{data.date}</p>
+                        )}
+                        {data.type === 'estimation' && data.exists && (
+                            <Button
+                                className="mt-4"
+                                size="sm"
+                                variant="solid"
+                                icon={<HiOutlineEye />}
+                                onClick={() => navigate(data.viewRoute || '', { state: { estimationId:data.id }  })}
+                            >
+                                View Estimation
+                            </Button>
                         )}
                     </div>
                 </div>
@@ -109,55 +120,54 @@ const ProjectView = () => {
     const [projectError, setProjectError] = useState<any>(null)
 
     useEffect(() => {
-        // Simulate loading data
-        setLoading(true)
-        
-        // This would be replaced with actual API call to get document status
-        setTimeout(() => {
-            // Mock data - in real app this would come from API
-            const mockDocuments: Document[] = [
-                {
-                    type: 'estimation',
-                    title: 'Estimation',
-                    amount: 12500,
-                    date: '2023-05-15',
-                    status: 'Approved',
-                    icon: '/img/document-icons/estimate.png',
-                    route: "/app/create-estimation",
-                    exists: false
-                },
-                {
-                    type: 'quotation',
-                    title: 'Quotation',
-                    icon: '/img/document-icons/quotation.png',
-                    route: "/app/quotation-new",
-                    exists: false
-                },
-                {
-                    type: 'invoice',
-                    title: 'Invoice',
-                    icon: '/img/document-icons/invoice.png',
-                    route: "/app/invoices/new",
-                    exists: false
-                },
-                {
-                    type: 'workReport',
-                    title: 'Work Report',
-                    icon: '/img/document-icons/report.png',
-                    route: "/app/work-reports/new",
-                    exists: false
-                }
-            ]
-            setDocuments(mockDocuments)
-            setLoading(false)
-        }, 1000)
-        
-        // Fetch project data
+        // Fetch project data first
         setProjectLoading(true)
         fetchProject(id)
             .then(data => {
                 setProjectData(data?.data)
                 setProjectLoading(false)
+                
+                // After getting project data, set up documents
+                const hasEstimation = !!data?.data?.estimationId
+                
+                const mockDocuments: Document[] = [
+                    {
+                        type: 'estimation',
+                        title: 'Estimation',
+                        amount: hasEstimation ? 12500 : undefined,
+                        date: hasEstimation ? '2023-05-15' : undefined,
+                        // status: hasEstimation ? 'Approved' : undefined,
+                        // icon: '/img/document-icons/estimate.png',
+                        route: "/app/create-estimation", // Route for creating new estimation
+                        viewRoute: hasEstimation 
+                            ? `/app/estimation-view/${data.data.estimationId}` 
+                            : undefined, // Route for viewing existing estimation
+                        exists: hasEstimation
+                    },
+                    {
+                        type: 'quotation',
+                        title: 'Quotation',
+                        icon: '/img/document-icons/quotation.png',
+                        route: "/app/quotation-new",
+                        exists: false
+                    },
+                    {
+                        type: 'invoice',
+                        title: 'Invoice',
+                        icon: '/img/document-icons/invoice.png',
+                        route: "/app/invoices/new",
+                        exists: false
+                    },
+                    {
+                        type: 'workReport',
+                        title: 'Work Report',
+                        icon: '/img/document-icons/report.png',
+                        route: "/app/work-reports/new",
+                        exists: false
+                    }
+                ]
+                setDocuments(mockDocuments)
+                setLoading(false)
             })
             .catch(error => {
                 setProjectError(error)
@@ -168,7 +178,7 @@ const ProjectView = () => {
     const handleAddDocument = (type: string) => {
         const document = documents.find(doc => doc.type === type)
         if (document) {
-            navigate(document.route, { state: { projectId: id } })
+            navigate(document.route, { state: id })
         }
         toast.push(
             <Notification 
