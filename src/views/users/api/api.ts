@@ -47,3 +47,14 @@ export const addUser = async (values: any) => {
         throw error
     }
 }
+
+
+export const fetchUserView = async (id: string) => {
+    try {
+        const response = await BaseService.get(`/user/${id}`)
+        return response.data
+    } catch (error) {
+        console.error('Error fetching user:', error)
+        throw error
+    }
+}

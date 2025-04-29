@@ -21,13 +21,24 @@ const appsNavigationConfig: NavigationTree[] = [
                         key: 'apps.dashboard',
                         path: `${APP_PREFIX_PATH}/dashboard`,
                         title: 'Dashboard',
-                        translateKey: 'nav.apps.dashboard',
+                        translateKey: 'Dashboard',
                         icon: 'project',
                         type: NAV_ITEM_TYPE_ITEM,
                         authority: [ADMIN, USER,SUPERADMIN],
                         subMenu: [],
            },
-        
+
+           {
+            key: 'apps.ongoingworks',
+            path: `${APP_PREFIX_PATH}/ongoingworks`,
+            title: 'Ongoing Works',
+            translateKey: 'Ongoing Works',
+            icon: 'graph',
+            type: NAV_ITEM_TYPE_ITEM,
+            authority: [ADMIN, USER,SUPERADMIN],
+            subMenu: [],
+},
+         
             // {
             //     key: 'apps.estimation',
             //     path: '',
@@ -141,6 +152,16 @@ const appsNavigationConfig: NavigationTree[] = [
                     
                 ],
             },
+//             {
+//                 key: 'apps.myworks',
+//                 path: `${APP_PREFIX_PATH}/myworks`,
+//                 title: 'My works',
+//                 translateKey: 'nav.apps.myworks',
+//                 icon: 'project',
+//                 type: NAV_ITEM_TYPE_ITEM,
+//                 authority: [ADMIN, USER,SUPERADMIN],
+//                 subMenu: [],
+//    },
             {
                 key: 'apps.project',
                 path: '',
@@ -209,6 +230,7 @@ const appsNavigationConfig: NavigationTree[] = [
                     
                 ],
             },
+           
         ],
     },
 ]

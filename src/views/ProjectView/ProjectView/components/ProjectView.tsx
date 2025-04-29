@@ -17,6 +17,8 @@ import ProjectInfo from './ProjectInfo'
 import { useNavigate, useParams } from 'react-router-dom'
 import { fetchProject } from '../api/api'
 import Button from '@/components/ui/Button'
+import Drawer from '@/components/ui/Drawer'
+import Dialog from '@/components/ui/Dialog'
 
 // Define Document type
 interface Document {
@@ -110,6 +112,67 @@ const DocumentCard = ({
     )
 }
 
+
+const StatusModal = ({ 
+    isOpen, 
+    onClose, 
+    onStatusChange 
+}: { 
+    isOpen: boolean
+    onClose: () => void
+    onStatusChange: (status: string, comment: string) => void
+}) => {
+    const [comment, setComment] = useState('')
+    const [selectedStatus, setSelectedStatus] = useState('')
+
+    const handleSubmit = () => {
+        if (selectedStatus) {
+            onStatusChange(selectedStatus, comment)
+            onClose()
+        }
+    }
+
+    return (
+        <Dialog
+    isOpen={isOpen}
+    onClose={onClose}
+    width={500}
+    className="dark:bg-gray-800"
+>
+    <h5 className="mb-4 dark:text-white">Update Project Status</h5>
+    
+    <div className="mb-4">
+        <label className="block mb-2 dark:text-gray-300">Comments</label>
+        <textarea
+            className="w-full p-2 border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            rows={4}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Enter your comments here..."
+        />
+    </div>
+    
+    <div className="flex justify-end space-x-2">
+        <Button 
+            variant="plain" 
+            onClick={onClose}
+            className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
+        >
+            Reject
+        </Button>
+        <Button 
+            variant="solid" 
+            onClick={handleSubmit}
+            disabled={selectedStatus}
+            className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600"
+        >
+            Approved
+        </Button>
+    </div>
+</Dialog>
+    )
+}
+
 const ProjectView = () => {
     const { id } = useParams()
     const [loading, setLoading] = useState(false)
@@ -118,6 +181,40 @@ const ProjectView = () => {
     const [projectData, setProjectData] = useState<any>(null)
     const [projectLoading, setProjectLoading] = useState(false)
     const [projectError, setProjectError] = useState<any>(null)
+    const [isOpen, setIsOpen] = useState(false)
+    const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
+
+
+    const openDrawer = () => {
+        setIsOpen(true)
+    }
+
+    const onDrawerClose = () => {
+        setIsOpen(false)
+    }
+
+    const openStatusModal = () => {
+        setIsStatusModalOpen(true)
+    }
+
+    const closeStatusModal = () => {
+        setIsStatusModalOpen(false)
+    }
+
+
+    const handleStatusChange = (status: string, comment: string) => {
+        console.log(`Status changed to: ${status}`, `Comment: ${comment}`)
+        toast.push(
+            <Notification 
+                title={`Status updated to ${status}`} 
+                type="success" 
+                duration={2000} 
+            />,
+            {
+                placement: 'top-center',
+            },
+        )
+    }
 
     useEffect(() => {
         // Fetch project data first
@@ -192,7 +289,20 @@ const ProjectView = () => {
         )
     }
 
+    const Footer = (
+        <div className="text-right w-full">
+            <Button size="sm" className="mr-2" onClick={() => onDrawerClose()}>
+                Cancel
+            </Button>
+            <Button size="sm" variant="solid" onClick={() => onDrawerClose()}>
+                Confirm
+            </Button>
+        </div>
+    )
+
     return (
+
+
         <div className="flex flex-col gap-4">
             {/* First line - Document cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -232,7 +342,34 @@ const ProjectView = () => {
                 </div>
                 <div>
                     <CustomerInfo clientinformation={projectData}/>
+                    <div>
+                        <br />
+            <Button variant="solid" onClick={() => openDrawer()}>
+                Assign 
+            </Button>
+            <br />
+                        <br />
+                        <Button variant="solid" onClick={openStatusModal}>
+                            Status 
+                        </Button>
+            <Drawer
+                title="Drawer Title"
+                isOpen={isOpen}
+                footer={Footer}
+                onClose={onDrawerClose}
+                onRequestClose={onDrawerClose}
+            >
+                Drawer Content
+            </Drawer>
+            <StatusModal
+                            isOpen={isStatusModalOpen}
+                            onClose={closeStatusModal}
+                            onStatusChange={handleStatusChange}
+                        />
+        </div>
                 </div>
+              
+               
             </div>
         </div>
     )

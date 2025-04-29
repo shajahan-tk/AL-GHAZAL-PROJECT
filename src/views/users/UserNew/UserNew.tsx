@@ -2,10 +2,9 @@
 import toast from '@/components/ui/toast'
 import Notification from '@/components/ui/Notification'
 import { useNavigate, useParams } from 'react-router-dom'
-// import UserForm, { FormModel, SetSubmitting } from './UserForm'
-import { addUser, editUser, fetchUserById } from '../api/api'
 import { useEffect, useState } from 'react'
-import UserForm, { FormModel ,SetSubmitting} from '../UserForm'
+import UserForm, { FormModel, SetSubmitting } from '../UserForm'
+import { addUser, editUser, fetchUserById } from '../api/api'
 
 const UserNew = () => {
     const navigate = useNavigate()
@@ -20,7 +19,15 @@ const UserNew = () => {
                     console.log('Fetching user data for ID:', id)
                     const response = await fetchUserById(id)
                     console.log('User data fetched:', response.data)
-                    setInitialData(response.data)
+                    
+                    // Ensure profileImage and signatureImage fields exist in the response
+                    const userData = {
+                        ...response.data,
+                        profileImage: response.data.profileImage || '',
+                        signatureImage: response.data.signatureImage || ''
+                    }
+                    
+                    setInitialData(userData)
                     setLoading(false)
                 } catch (error) {
                     console.error('Error fetching user:', error)
@@ -120,6 +127,8 @@ const UserNew = () => {
                     phoneNumbers: [''],
                     role: '',
                     password: '',
+                    profileImage: '',
+                    signatureImage: ''
                 }}
                 onFormSubmit={handleFormSubmit}
                 onDiscard={handleDiscard}

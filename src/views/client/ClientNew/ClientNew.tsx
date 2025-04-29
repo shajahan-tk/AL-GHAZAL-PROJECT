@@ -29,7 +29,7 @@ const ClientNew = () => {
                         />,
                         { placement: 'top-center' }
                     )
-                    navigate('/app/client-list')
+                    navigate(-1)
                 }
             }
             fetchData()
@@ -54,7 +54,7 @@ const ClientNew = () => {
                     />,
                     { placement: 'top-center' }
                 )
-                navigate('/app/client-list')
+                navigate(-1)
             }
         } catch (error) {
             toast.push(

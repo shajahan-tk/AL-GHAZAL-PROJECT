@@ -8,8 +8,9 @@ import { HiCalendar, HiPencil } from 'react-icons/hi'
 import useThemeClass from '@/utils/hooks/useThemeClass'
 import { useAppSelector } from '@/store'
 import dayjs from 'dayjs'
-import { fetchEstimation } from '../../api/api'
+import { downloadEstimationPdf, fetchEstimation, fetchEstimationPdf } from '../../api/api'
 import { APP_PREFIX_PATH } from '@/constants/route.constant'
+import { Notification, toast } from '@/components/ui'
 
 type Estimation = {
     _id: string
@@ -63,7 +64,8 @@ const EstimationContent = () => {
     const [loading, setLoading] = useState(true)
     const [data, setData] = useState<Estimation | null>(null)
     const mode = useAppSelector((state) => state.theme.mode)
-
+    const [pdfLoading, setPdfLoading] = useState(false) // Local state for PDF loading
+    const [error, setError] = useState('') // Local state for error handling
     const navigate = useNavigate()
 
 
@@ -98,7 +100,30 @@ const EstimationContent = () => {
     const totalMaterials = data?.materials.reduce((sum, item) => sum + item.total, 0) || 0
     const totalLabour = data?.labour.reduce((sum, item) => sum + item.total, 0) || 0
     const totalTerms = data?.termsAndConditions.reduce((sum, item) => sum + item.total, 0) || 0
-
+    const handleDownloadPdf = async () => {
+        if (!data) return
+        
+        setPdfLoading(true)
+        setError('')
+        
+        try {
+            await downloadEstimationPdf(data._id, data.estimationNumber)
+            toast.push(
+                <Notification title="Success" type="success">
+                    PDF downloaded successfully
+                </Notification>
+            )
+        } catch (error) {
+            setError('Failed to download PDF')
+            toast.push(
+                <Notification title="Error" type="danger">
+                    {error.message || 'Failed to download PDF'}
+                </Notification>
+            )
+        } finally {
+            setPdfLoading(false)
+        }
+    }
     return (
         <Loading loading={loading}>
             {data && (
@@ -283,9 +308,13 @@ const EstimationContent = () => {
             Estimation was created on a computer and is valid without the signature and seal.
         </small>
         <div className="flex gap-2">
-            <Button variant="solid" onClick={() => window.print()}>
-                Print
-            </Button>
+        <Button 
+                                variant="solid" 
+                                loading={pdfLoading}
+                                onClick={handleDownloadPdf}
+                            >
+                                {pdfLoading ? 'Generating PDF...' : 'Download PDF'}
+                            </Button>
             <Button 
                 variant="solid" 
                 icon={<HiPencil />}

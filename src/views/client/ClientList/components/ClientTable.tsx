@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from 'react'
 import Avatar from '@/components/ui/Avatar'
 import DataTable from '@/components/shared/DataTable'
-import { HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi'
+import { HiOutlineEye, HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi'
 import { FiUser } from 'react-icons/fi'
 import useThemeClass from '@/utils/hooks/useThemeClass'
 import { useNavigate } from 'react-router-dom'
@@ -53,9 +53,18 @@ const ActionColumn = ({ row }: { row: Client }) => {
     const onDelete = () => {
         console.log('Delete client:', row._id)
     }
+    const onView = () => {
+        navigate(`/app/client-view/${row?._id}`)
+    }
 
     return (
         <div className="flex justify-end text-lg">
+                        <span
+                            className={`cursor-pointer p-2 hover:${textTheme}`}
+                            onClick={onView}
+                        >
+                            <HiOutlineEye />
+                        </span>
             <span
                 className={`cursor-pointer p-2 hover:${textTheme}`}
                 onClick={onEdit}

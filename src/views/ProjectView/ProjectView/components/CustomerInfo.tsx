@@ -51,6 +51,8 @@ const CustomerInfo = ({ clientinformation: data }) => {
                 <div>{data?.billingAddress.line4}</div>
             </address> */}
         </Card>
+
+        
     )
 }
 

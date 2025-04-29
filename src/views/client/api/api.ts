@@ -72,4 +72,13 @@ export const editClient = async (id: string, values: any) => {
     }
 }
 
-    
+
+export const fetchClienView = async (id: string) => {
+    try {
+        const response = await BaseService.get(`/client/${id}`)
+        return response.data
+    } catch (error) {
+        console.error('Error fetching client:', error)
+        throw error
+    }
+}

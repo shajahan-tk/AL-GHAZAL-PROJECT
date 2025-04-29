@@ -2,7 +2,7 @@ import { useState, useMemo, useRef } from 'react'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import DataTable from '@/components/shared/DataTable'
-import { HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi'
+import { HiOutlineEye, HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi'
 import { FiUser } from 'react-icons/fi'
 import useThemeClass from '@/utils/hooks/useThemeClass'
 import UserDeleteConfirmation from './UserDeleteConfirmation'
@@ -12,7 +12,6 @@ import type {
     OnSortParam,
     ColumnDef,
 } from '@/components/shared/DataTable'
-
 import { useQuery } from '@tanstack/react-query'
 import debounce from 'lodash/debounce'
 import Input from '@/components/ui/Input'
@@ -30,6 +29,8 @@ type User = {
     updatedAt: string
     createdBy: string
     __v: number
+    profileImage?: string
+    signatureImage?: string
 }
 
 type Pagination = {
@@ -59,28 +60,36 @@ const ActionColumn = ({ row }: { row: User }) => {
     const navigate = useNavigate()
 
     const onEdit = () => {
-        navigate(`/app/user-form/${row._id}`) // Updated route
+        navigate(`/app/user-form/${row._id}`)
     }
 
-    const onDelete = () => {
-        // Handle delete directly here or use a context/state management
-        console.log('Delete user:', row._id)
+    // const onDelete = () => {
+    //     console.log('Delete user:', row._id)
+    // }
+    const onView = () => {
+        navigate(`/app/user-view/${row?._id}`)
     }
 
     return (
         <div className="flex justify-end text-lg">
             <span
                 className={`cursor-pointer p-2 hover:${textTheme}`}
+                onClick={onView}
+            >
+                <HiOutlineEye />
+            </span>
+            <span
+                className={`cursor-pointer p-2 hover:${textTheme}`}
                 onClick={onEdit}
             >
                 <HiOutlinePencil />
             </span>
-            <span
+            {/* <span
                 className="cursor-pointer p-2 hover:text-red-500"
                 onClick={onDelete}
             >
                 <HiOutlineTrash />
-            </span>
+            </span> */}
         </div>
     )
 }
@@ -88,7 +97,11 @@ const ActionColumn = ({ row }: { row: User }) => {
 const UserColumn = ({ row }: { row: User }) => {
     return (
         <div className="flex items-center">
-            <Avatar icon={<FiUser />} />
+            <Avatar 
+                src={row.profileImage} 
+                icon={<FiUser />} 
+                alt={`${row.firstName} ${row.lastName}`}
+            />
             <span className="ml-2 rtl:mr-2 font-semibold">
                 {row.firstName} {row.lastName}
             </span>
@@ -113,23 +126,6 @@ const UserTable = () => {
         }),
     })
 
-    // Update your fetchUser function in api.ts to accept params:
-    /*
-    export const fetchUser = async (params?: {
-        page?: number
-        limit?: number
-        search?: string
-    }) => {
-        try {
-            const response = await BaseService.get("/user", { params })
-            return response.data
-        } catch (error) {
-            console.log(error)
-            throw error
-        }
-    }
-    */
-
     const users = response?.data?.users || []
     const paginationData = response?.data?.pagination || {
         total: 0,
@@ -143,7 +139,7 @@ const UserTable = () => {
     const debouncedSearch = useMemo(
         () => debounce((value: string) => {
             setSearchTerm(value)
-            setPagination(prev => ({ ...prev, page: 1 })) // Reset to first page on search
+            setPagination(prev => ({ ...prev, page: 1 }))
         }, 500),
         []
     )
@@ -171,6 +167,34 @@ const UserTable = () => {
                     <span>{props.row.original.phoneNumbers?.[0] || 'N/A'}</span>
                 ),
             },
+            // {
+            //     header: 'Profile Image',
+            //     accessorKey: 'profileImage',
+            //     cell: (props) => (
+            //         <Avatar 
+            //             src={props.row.original.profileImage} 
+            //             shape="square"
+            //             className="w-10 h-10"
+            //             icon={<FiUser />}
+            //         />
+            //     ),
+            // },
+            // {
+            //     header: 'Signature',
+            //     accessorKey: 'signatureImage',
+            //     cell: (props) => (
+            //         props.row.original.signatureImage ? (
+            //             <Avatar 
+            //                 src={props.row.original.signatureImage} 
+            //                 shape="square"
+            //                 className="w-10 h-10"
+            //                 icon={<FiUser />}
+            //             />
+            //         ) : (
+            //             <span>N/A</span>
+            //         )
+            //     ),
+            // },
             {
                 header: 'Role',
                 accessorKey: 'role',
@@ -208,7 +232,7 @@ const UserTable = () => {
     }
 
     const onSelectChange = (limit: number) => {
-        setPagination(prev => ({ page: 1, limit })) // Reset to first page when changing page size
+        setPagination(prev => ({ page: 1, limit }))
     }
 
     if (error) {
@@ -229,7 +253,7 @@ const UserTable = () => {
                 ref={tableRef}
                 columns={columns}
                 data={users}
-                skeletonAvatarColumns={[0]}
+                skeletonAvatarColumns={[0, 3, 4]} // Added indexes for image columns
                 skeletonAvatarProps={{ className: 'rounded-md' }}
                 loading={isLoading}
                 pagingData={{

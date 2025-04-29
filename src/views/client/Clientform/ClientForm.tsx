@@ -19,13 +19,17 @@ const yupToFormErrors = (yupError: any) => {
   })
   return errors
 }
-
 const validationSchema = Yup.object().shape({
   clientName: Yup.string().required('Client Name Required'),
+  email: Yup.string()
+    .required('Email Required')
+    .email('Invalid email format'),
   clientAddress: Yup.string().required('Client Address Required'),
   pincode: Yup.string()
     .required('Pincode Required')
-    .matches(/^[0-9]+$/, 'Pincode must be numeric').min(6).max(6),
+    .matches(/^[0-9]+$/, 'Pincode must be numeric')
+    .min(6)
+    .max(6),
   mobileNumber: Yup.string()
     .required('Mobile Number Required')
     .matches(/^[0-9]+$/, 'Mobile number must be digits only'),
@@ -34,11 +38,11 @@ const validationSchema = Yup.object().shape({
     .nullable(),
   trnNumber: Yup.string()
     .required('TRN Number Required'),
-   
 })
 
 type InitialData = {
   clientName?: string
+  email?:string
   clientAddress?: string
   pincode?: string
   mobileNumber?: string
@@ -63,6 +67,7 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
         type,
         initialData = {
           clientName: '',
+          email:'',
           clientAddress: '',
           pincode: '',
           mobileNumber: '',
@@ -119,6 +124,19 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
                       autoComplete="off"
                       name="clientName"
                       placeholder="Client Name"
+                      component={Input}
+                    />
+                  </FormItem>
+                  <FormItem
+                    label="Email"
+                    invalid={!!(errors.email && touched.email)}
+                    errorMessage={errors.email}
+                  >
+                    <Field
+                      type="text"
+                      autoComplete="off"
+                      name="email"
+                      placeholder="Email"
                       component={Input}
                     />
                   </FormItem>

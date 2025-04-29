@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, useState } from 'react'
 import { FormContainer, FormItem } from '@/components/ui/Form'
 import Button from '@/components/ui/Button'
 import StickyFooter from '@/components/shared/StickyFooter'
@@ -7,10 +7,11 @@ import cloneDeep from 'lodash/cloneDeep'
 import { HiOutlinePlus, HiOutlineTrash } from 'react-icons/hi'
 import { AiOutlineSave } from 'react-icons/ai'
 import * as Yup from 'yup'
-import { Input } from '@/components/ui'
+import { Input, Upload } from '@/components/ui'
 import { AdaptableCard } from '@/components/shared'
 import useUniqueId from '@/components/ui/hooks/useUniqueId'
 import Select from '@/components/ui/Select'
+import ConfirmDialog from '@/components/shared/ConfirmDialog'
 
 type FormikRef = FormikProps<any>
 
@@ -28,6 +29,8 @@ type InitialData = {
     phoneNumbers?: string[]
     role?: string
     password?: string
+    profileImage?: string | File
+    signatureImage?: string | File
 }
 
 export type FormModel = Omit<InitialData, 'tags'> & {
@@ -56,6 +59,8 @@ const UserForm = forwardRef<FormikRef, UserForm>((props, ref) => {
             phoneNumbers: [''],
             role: '',
             password: '',
+            profileImage: '',
+            signatureImage: ''
         },
         onFormSubmit,
         onDiscard,
@@ -64,7 +69,9 @@ const UserForm = forwardRef<FormikRef, UserForm>((props, ref) => {
 
     const newId = useUniqueId('product-')
 
-    // Dynamic validation schema
+    const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
+    const [signatureImageFile, setSignatureImageFile] = useState<File | null>(null)
+
     const validationSchema = Yup.object().shape({
         firstName: Yup.string().required('First Name Required'),
         lastName: Yup.string().required('Last Name Required'),
@@ -75,21 +82,42 @@ const UserForm = forwardRef<FormikRef, UserForm>((props, ref) => {
             : Yup.string(),
         phoneNumbers: Yup.array().of(
             Yup.string().matches(/^[0-9]+$/, 'Phone number must be digits only')
-        )
+        ),
+        profileImage: type === 'new' 
+            ? Yup.mixed().required('Profile image is required') 
+            : Yup.mixed(),
+        signatureImage: type === 'new' 
+            ? Yup.mixed().required('Signature is required') 
+            : Yup.mixed()
     })
 
-    const handleSubmit = (values: FormModel, { setSubmitting }: { setSubmitting: SetSubmitting }) => {
+    const handleSubmit = async (values: FormModel, { setSubmitting }: { setSubmitting: SetSubmitting }) => {
         console.log('Form submission started with values:', values)
-        const formData = cloneDeep(values)
+        const formData = new FormData()
         
-        // Remove password field if it's empty in edit mode
-        if (type === 'edit' && !formData.password) {
-            console.log('Removing empty password field in edit mode')
-            delete formData.password
+        Object.keys(values).forEach(key => {
+            if (key === 'phoneNumbers') {
+                values.phoneNumbers?.forEach((num, index) => {
+                    formData.append(`phoneNumbers[${index}]`, num)
+                })
+            } else if (key !== 'profileImage' && key !== 'signatureImage') {
+                formData.append(key, values[key as keyof FormModel] as string)
+            }
+        })
+        
+        if (profileImageFile) {
+            formData.append('profileImage', profileImageFile)
+        }
+        if (signatureImageFile) {
+            formData.append('signatureImage', signatureImageFile)
         }
         
-        console.log('Final data being submitted:', formData)
-        onFormSubmit?.(formData, setSubmitting)
+        console.log('FormData contents:')
+        for (let [key, value] of formData.entries()) {
+            console.log(key, value)
+        }
+        
+        onFormSubmit?.(formData as unknown as FormModel, setSubmitting)
     }
 
     return (
@@ -101,10 +129,34 @@ const UserForm = forwardRef<FormikRef, UserForm>((props, ref) => {
                 }}
                 validationSchema={validationSchema}
                 onSubmit={handleSubmit}
-                enableReinitialize={true} // Important for edit mode
+                enableReinitialize={true}
             >
-                {({ values, touched, errors, isSubmitting }) => {
-                    console.log('Current form values:', values)
+                {({ values, touched, errors, isSubmitting, setFieldValue }) => {
+                    
+                    const handleProfileImageChange = (files: File[]) => {
+                        if (files.length > 0) {
+                            setProfileImageFile(files[0])
+                            setFieldValue('profileImage', files[0].name)
+                        }
+                    }
+                    
+                    const handleSignatureImageChange = (files: File[]) => {
+                        if (files.length > 0) {
+                            setSignatureImageFile(files[0])
+                            setFieldValue('signatureImage', files[0].name)
+                        }
+                    }
+
+                    const handleProfileRemove = () => {
+                        setProfileImageFile(null)
+                        setFieldValue('profileImage', '')
+                    }
+
+                    const handleSignatureRemove = () => {
+                        setSignatureImageFile(null)
+                        setFieldValue('signatureImage', '')
+                    }
+
                     return (
                         <Form>
                             <FormContainer>
@@ -179,7 +231,38 @@ const UserForm = forwardRef<FormikRef, UserForm>((props, ref) => {
                                                 </Field>
                                             </FormItem>
                                         </div>
-
+                                       
+                                        <div className='flex flex-col-2 gap-4 mb-4'>
+                                            <div className='flex flex-col gap-y-2'>
+                                                <FormItem
+                                                    label="Signature"
+                                                    invalid={!!(errors.signatureImage && touched.signatureImage)}
+                                                    errorMessage={errors.signatureImage as string}
+                                                >
+                                                    <Upload 
+                                                        onChange={(files) => handleSignatureImageChange(files)}
+                                                        onFileRemove={handleSignatureRemove}
+                                                        uploadLimit={1}
+                                                        defaultFile={initialData.signatureImage}
+                                                    />
+                                                </FormItem>
+                                            </div>
+                                            <div className='flex flex-col gap-y-2'>
+                                                <FormItem
+                                                    label="Profile Image"
+                                                    invalid={!!(errors.profileImage && touched.profileImage)}
+                                                    errorMessage={errors.profileImage as string}
+                                                >
+                                                    <Upload 
+                                                        onChange={(files) => handleProfileImageChange(files)}
+                                                        onFileRemove={handleProfileRemove}
+                                                        uploadLimit={1}
+                                                        defaultFile={initialData.profileImage}
+                                                    />
+                                                </FormItem>
+                                            </div>
+                                        </div>
+                                        
                                         <AdaptableCard divider className="mb-4">
                                             <FieldArray name="phoneNumbers">
                                                 {({ push, remove }) => (
@@ -266,10 +349,7 @@ const UserForm = forwardRef<FormikRef, UserForm>((props, ref) => {
                                             size="sm"
                                             className="ltr:mr-3 rtl:ml-3"
                                             type="button"
-                                            onClick={() => {
-                                                console.log('Discard clicked')
-                                                onDiscard?.()
-                                            }}
+                                            onClick={() => onDiscard?.()}
                                         >
                                             Discard
                                         </Button>
@@ -279,7 +359,6 @@ const UserForm = forwardRef<FormikRef, UserForm>((props, ref) => {
                                             loading={isSubmitting}
                                             icon={<AiOutlineSave />}
                                             type="submit"
-                                            onClick={() => console.log('Save button clicked')}
                                         >
                                             Save
                                         </Button>
@@ -296,7 +375,6 @@ const UserForm = forwardRef<FormikRef, UserForm>((props, ref) => {
 
 UserForm.displayName = 'UserForm'
 
-// Delete Product Button Component
 const DeleteProductButton = ({ onDelete }: { onDelete: OnDelete }) => {
     const [dialogOpen, setDialogOpen] = useState(false)
 

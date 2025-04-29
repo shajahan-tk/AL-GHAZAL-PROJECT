@@ -60,6 +60,21 @@ type EstimationFormProps = {
     onDiscard?: () => void
 }
 
+const termsCategories = [
+    { value: 'general', label: 'The work will be started after receiving the PO' },
+    { value: 'payment', label: 'The work will be started after the confirmation of client' },
+
+];
+
+const termsTypes = [
+    { value: '1', label: 'The payment as per imdaad accounting terms 90 days'},
+    { value: '2', label: 'The payment as per the accounting  terms 60 days' },
+    { value: '3', label: 'The payment as per the accounting terms 30 days' },
+    { value: '4', label: '50% advance and 50% after  completion  of work' },
+    { value: '5', label: '50% advance before starting the work and 30% work on progress and 20% after completion of work' },
+    { value: '6', label: 'Cash on delivery'},
+];
+
 const measurementUnits = [
     { value: 'kg', label: 'Kilogram (kg)' },
     { value: 'g', label: 'Gram (g)' },
@@ -559,6 +574,45 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                         List of terms and conditions for the quotation
                                     </p>
 
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <FormItem
+            label="Terms 1"
+            invalid={!!errors.termsCategory && touched.termsCategory}
+            errorMessage={errors.termsCategory}
+        >
+            <Select
+                name="termsCategory"
+                options={termsCategories}
+                placeholder="Select category"
+                value={termsCategories.find(
+                    (cat) => cat.value === values.termsCategory
+                )}
+                onChange={(option) =>
+                    setFieldValue('termsCategory', option?.value)
+                }
+            />
+        </FormItem>
+
+        <FormItem
+            label="Terms 2"
+            invalid={!!errors.termsType && touched.termsType}
+            errorMessage={errors.termsType}
+        >
+            <Select
+                name="termsType"
+                options={termsTypes}
+                placeholder="Select type"
+                value={termsTypes.find(
+                    (type) => type.value === values.termsType
+                )}
+                onChange={(option) =>
+                    setFieldValue('termsType', option?.value)
+                }
+            />
+        </FormItem>
+    </div>
+                
+
                                     <FieldArray name="termsAndConditions">
                                         {({ push, remove }) => (
                                             <div className="space-y-4">
@@ -570,7 +624,8 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                                         >
                                                             <div className="md:col-span-11">
                                                                 <FormItem
-                                                                    label={`Term ${index + 1}`}
+                                                                    label={`Terms and conditions `}
+                                                                    // ${index + 1}
                                                                     invalid={
                                                                         !!errors
                                                                             .termsAndConditions?.[
@@ -593,7 +648,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                                                 >
                                                                     <Field
                                                                         name={`termsAndConditions[${index}].description`}
-                                                                        placeholder="Enter term or condition"
+                                                                        placeholder="Enter the new termsAndConditions"
                                                                         component={Textarea}
                                                                         textAreaClassName="min-h-[60px]"
                                                                     />
@@ -641,6 +696,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                             </div>
                                         )}
                                     </FieldArray>
+                                    
                                 </AdaptableCard>
                                 <StickyFooter
                                     className="-mx-8 px-8 flex items-center justify-between py-4"

@@ -57,6 +57,7 @@ interface InitialData {
   commissionAmount?: number;
   profit?: number;
   project?: string;
+  subject?:string;
 }
 
 export type FormModel = InitialData;
@@ -78,6 +79,7 @@ const validationSchema = Yup.object().shape({
     .min(Yup.ref('dateOfEstimation'), 'Valid Until Date cannot be before Estimation Date'),
   paymentDueBy: Yup.string().required('Payment Due is required'),
   status: Yup.string().required('Status is required'),
+  subject: Yup.string().required('subject is required'),
   materials: Yup.array().of(
     Yup.object().shape({
       description: Yup.string().required('Material name is required'),
@@ -141,6 +143,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
       { description: '', quantity: 0, unitPrice: 0, total: 0 },
     ],
     estimatedAmount: 0,
+    subject:"",
   });
 
   const [isLoading, setIsLoading] = useState(!!estimationId);
@@ -181,7 +184,8 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
             quotationAmount: estimation.quotationAmount,
             commissionAmount: estimation.commissionAmount,
             profit: estimation.profit,
-            project:estimation.project._id
+            project:estimation.project._id,
+            subject:estimation?.subject
           });
         } catch (error) {
           console.error('Error fetching estimation:', error);
@@ -215,7 +219,8 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
           workStartDate: values.workStartDate,
           commissionAmount: values.commissionAmount,
           quotationAmount: values.quotationAmount,
-          status: values.status
+          status: values.status,
+          subject:values.subject
         });
         
         toast.push(
@@ -242,7 +247,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
           workStartDate: values.workStartDate,
           commissionAmount: values.commissionAmount,
           quotationAmount: values.quotationAmount,
-
+          subject:values.subject,
         });
         
         toast.push(
@@ -309,7 +314,6 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
               setFieldValue(`materials[${index}].total`, total);
             }
           });
-
           // Calculate labour totals
           values.labourCharges.forEach((labour, index) => {
             const total = parseFloat((labour.days * labour.price).toFixed(2));
@@ -436,34 +440,21 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
 </FormItem>
                 </div>
 
-                {/* {id && (
+               
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormItem label="Estimation Number">
-                      <Input
-                        readOnly
-                        value={values.estimationNumber}
-                        placeholder="Estimation Number"
+                    <FormItem label="Subject">
+                      <Field
+                        type="text"
+                        name="subject"
+                        value={values.subject}
+                        placeholder="Subject"
+                        textArea={true}
+                        component={Input}
                       />
                     </FormItem>
-                    <FormItem
-                      label="Status *"
-                      invalid={!!errors.status && touched.status}
-                      errorMessage={errors.status}
-                    >
-                      <Field
-                        as="select"
-                        name="status"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 dark:bg-[#1f2937] dark:border-gray-600 dark:text-white"
-                      >
-                        <option value="Draft">Draft</option>
-                        <option value="Sent">Sent</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                        <option value="Converted">Converted to Job</option>
-                      </Field>
-                    </FormItem>
+                   
                   </div>
-                )} */}
+              
               </AdaptableCard>
 
               <AdaptableCard divider className="mb-4">

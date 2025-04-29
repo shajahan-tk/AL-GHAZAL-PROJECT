@@ -1,5 +1,7 @@
 export const ROOT = '/'
 export const APP_PREFIX_PATH = '/app'
+export const ENG_PREFIX_PATH = '/eng'
+export const DRV_PREFIX_PATH = '/drv'
 export const AUTH_PREFIX_PATH = '/auth'
 export const UI_COMPONENTS_PREFIX_PATH = '/ui-components'
 export const PAGES_PREFIX_PATH = '/pages'

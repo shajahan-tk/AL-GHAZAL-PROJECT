@@ -53,6 +53,12 @@ const appsRoute: Routes = [
         authority: [ADMIN, USER,SUPERADMIN],
     },
     {
+        key: 'appsUserView.UserView',
+        path: `${APP_PREFIX_PATH}/user-view/:id`,
+        component: lazy(() => import('@/views/users/CustomerDetail/CustomerDetail')),
+        authority: [ADMIN, USER,SUPERADMIN],
+    },
+    {
         key: 'appsClients.clientsList',
         path: `${APP_PREFIX_PATH}/client-list`,
         component: lazy(() => import('@/views/client/ClientList/ClientList')),
@@ -68,6 +74,12 @@ const appsRoute: Routes = [
         key: 'appsClients.clientForm',
         path: `${APP_PREFIX_PATH}/client-form/:id?`, // Make id optional
         component: lazy(() => import('@/views/client/ClientNew/ClientNew')),
+        authority: [ADMIN, USER,SUPERADMIN],
+    },
+    {
+        key: 'appsClients.clientView',
+        path: `${APP_PREFIX_PATH}/client-view/:id?`, // Make id optional
+        component: lazy(() => import('@/views/client/CustomerDetail/CustomerDetail')),
         authority: [ADMIN, USER,SUPERADMIN],
     },
     {
@@ -88,6 +100,7 @@ const appsRoute: Routes = [
         component: lazy(() => import('@/views/projectNew/ProjectList/components/ProjectTable')),
         authority: [ADMIN, USER,SUPERADMIN],
     },
+
     {
         key: 'appsProjectView.ProjectView',
         path: `${APP_PREFIX_PATH}/project-view/:id`,
@@ -98,6 +111,12 @@ const appsRoute: Routes = [
         key: 'appsQuotation.quotationNew',
         path: `${APP_PREFIX_PATH}/quotation-new`,
         component: lazy(() => import('@/views/quotation/quotationcreation/QuotationCreations')),
+        authority: [ADMIN, USER,SUPERADMIN],
+    },
+    {
+        key: 'apps.ongoingworks',
+        path: `${APP_PREFIX_PATH}/ongoingworks`,
+        component: lazy(() => import('@/views/workstatus/ProjectDashboard/ProjectDashboard')),
         authority: [ADMIN, USER,SUPERADMIN],
     },
     {
