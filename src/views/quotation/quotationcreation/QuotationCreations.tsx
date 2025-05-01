@@ -6,18 +6,17 @@ import { Form, Formik, FormikProps } from 'formik'
 import * as Yup from 'yup'
 import toast from '@/components/ui/toast'
 import Notification from '@/components/ui/Notification'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import axios, { AxiosError, AxiosResponse } from 'axios'
-import { BASE_URL } from '@/constants/app.constant'
+import { useLocation, useNavigate } from 'react-router-dom'
 import AdaptableCard from '@/components/shared/AdaptableCard'
 import Input from '@/components/ui/Input'
 import { FormItem } from '@/components/ui/Form'
-import { Field, FieldArray, FormikErrors, FormikTouched } from 'formik'
+import { Field, FieldArray } from 'formik'
 import { HiOutlineTrash, HiOutlinePlus } from 'react-icons/hi'
 import DatePicker from '@/components/ui/DatePicker'
 import Select from '@/components/ui/Select'
 import Upload from '@/components/ui/Upload'
 import Textarea from '@/views/ui-components/forms/Input/Textarea'
+import BaseService from "@/services/BaseService"
 
 type FormikRef = FormikProps<any>
 
@@ -34,6 +33,10 @@ interface ITermsItem {
     description: string
 }
 
+interface IScopeOfWorkItem {
+    description: string
+}
+
 interface InitialData {
     _id?: string
     dateOfEstimation: Date
@@ -45,6 +48,7 @@ interface InitialData {
     estimationNumber?: string
     quotation: IQuotationItem[]
     termsAndConditions: ITermsItem[]
+    scopeOfWork: IScopeOfWorkItem[]
     estimatedAmount: number
     quotationAmount?: number
     commissionAmount?: number
@@ -52,6 +56,33 @@ interface InitialData {
     preparedByName: string
     checkedByName: string
     approvedByName: string
+    termsCategory?: string
+    termsType?: string
+}
+
+type QuotationApi = {
+    projectId: string
+    validUntil: string
+    scopeOfWork: string[]
+    termsAndConditions: string[]
+    items: {
+        description: string
+        uom: string
+        uomImage?: string
+        quantity: number
+        unitPrice: number
+        totalPrice: number
+    }[]
+}
+
+export const createQuotation = async (data: QuotationApi) => {
+    try {
+        const response = await BaseService.post("/quotation", data)
+        return response.data
+    } catch (error) {
+        console.log(error)
+        throw error
+    }
 }
 
 export type FormModel = InitialData
@@ -63,17 +94,16 @@ type EstimationFormProps = {
 const termsCategories = [
     { value: 'general', label: 'The work will be started after receiving the PO' },
     { value: 'payment', label: 'The work will be started after the confirmation of client' },
-
-];
+]
 
 const termsTypes = [
     { value: '1', label: 'The payment as per imdaad accounting terms 90 days'},
-    { value: '2', label: 'The payment as per the accounting  terms 60 days' },
+    { value: '2', label: 'The payment as per the accounting terms 60 days' },
     { value: '3', label: 'The payment as per the accounting terms 30 days' },
-    { value: '4', label: '50% advance and 50% after  completion  of work' },
+    { value: '4', label: '50% advance and 50% after completion of work' },
     { value: '5', label: '50% advance before starting the work and 30% work on progress and 20% after completion of work' },
-    { value: '6', label: 'Cash on delivery'},
-];
+    { value: '6', label: 'Cash on delivery'},
+]
 
 const measurementUnits = [
     { value: 'kg', label: 'Kilogram (kg)' },
@@ -92,7 +122,7 @@ const measurementUnits = [
     { value: 'pcs', label: 'Pieces (pcs)' },
     { value: 'set', label: 'Set' },
     { value: 'box', label: 'Box' },
-    { value: 'roll', label: 'Roll' },
+    { value: 'roll', label: 'Roll' }
 ]
 
 const validationSchema = Yup.object().shape({
@@ -119,7 +149,9 @@ const validationSchema = Yup.object().shape({
     status: Yup.string().required('Status is required'),
     quotation: Yup.array().of(
         Yup.object().shape({
-            description: Yup.string().required('Description is required'),
+            description: Yup.string()
+                .required('Description is required')
+                .min(3, 'Description must be at least 3 characters'),
             unitOfMeasurement: Yup.string().required('Unit of measurement is required'),
             quantity: Yup.number()
                 .required('Quantity is required')
@@ -127,6 +159,20 @@ const validationSchema = Yup.object().shape({
             unitPrice: Yup.number()
                 .required('Unit price is required')
                 .min(0, 'Unit price must be positive'),
+        }),
+    ),
+    termsAndConditions: Yup.array().of(
+        Yup.object().shape({
+            description: Yup.string()
+                .required('Term is required')
+                .min(3, 'Term must be at least 3 characters'),
+        }),
+    ),
+    scopeOfWork: Yup.array().of(
+        Yup.object().shape({
+            description: Yup.string()
+                .required('Scope is required')
+                .min(3, 'Scope must be at least 3 characters'),
         }),
     ),
     preparedByName: Yup.string().required('Prepared by is required'),
@@ -145,7 +191,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
             workStartDate: new Date(),
             workEndDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
             validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-            paymentDueBy: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+            paymentDueBy: 15, // days
             status: 'Draft',
             quotation: [
                 { 
@@ -159,6 +205,9 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
             termsAndConditions: [
                 { description: '' },
             ],
+            scopeOfWork: [
+                { description: '' },
+            ],
             estimatedAmount: 0,
             preparedByName: '',
             checkedByName: '',
@@ -168,19 +217,31 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
         const [isLoading, setIsLoading] = useState(false)
 
         const handleFormSubmit = async (values: FormModel) => {
+            setIsLoading(true)
             try {
-                const response: AxiosResponse = await createEstimation({
-                    project: projectId,
-                    paymentDueBy: values.paymentDueBy,
-                    termsAndConditions: values.termsAndConditions,
-                    validUntil: values.validUntil,
-                    quotation: values.quotation,
-                    workEndDate: values.workEndDate,
-                    workStartDate: values.workStartDate,
-                    commissionAmount: values.commissionAmount,
-                    quotationAmount: values.quotationAmount,
-                })
-                console.log(response)
+                // Prepare the data for API
+                const quotationData: QuotationApi = {
+                    projectId: projectId,
+                    validUntil: values.validUntil.toISOString(),
+                    scopeOfWork: values.scopeOfWork.map(item => item.description),
+                    termsAndConditions: [
+                        ...values.termsAndConditions.map(item => item.description),
+                        ...(values.termsCategory ? [termsCategories.find(t => t.value === values.termsCategory)?.label || ''] : []),
+                        ...(values.termsType ? [termsTypes.find(t => t.value === values.termsType)?.label || ''] : [])
+                    ].filter(Boolean),
+                    items: values.quotation.map(item => ({
+                        description: item.description,
+                        uom: item.unitOfMeasurement,
+                        uomImage: item.image,
+                        quantity: item.quantity,
+                        unitPrice: item.unitPrice,
+                        totalPrice: item.total
+                    }))
+                }
+
+                // Call the API
+                const response = await createQuotation(quotationData)
+                console.log('Quotation created:', response)
 
                 toast.push(
                     <Notification
@@ -194,9 +255,9 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                 )
 
                 navigate('/app/estimation-list')
-            } catch (error) {
+            } catch (error: any) {
                 console.error(`Error creating quotation:`, error)
-                if (error.status === 400) {
+                if (error.response?.status === 400) {
                     toast.push(
                         <Notification
                             title={`Not Created`}
@@ -219,6 +280,8 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                         { placement: 'top-center' },
                     )
                 }
+            } finally {
+                setIsLoading(false)
             }
         }
 
@@ -245,6 +308,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                     isSubmitting,
                     setFieldValue,
                     handleChange,
+                    handleBlur,
                 }) => {
                     // Calculate totals whenever values change
                     useEffect(() => {
@@ -344,23 +408,14 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                                                 <FormItem
                                                                     label={`Description ${index + 1}`}
                                                                     invalid={
-                                                                        !!errors
-                                                                            .quotation?.[
-                                                                            index
-                                                                        ]
-                                                                            ?.description &&
-                                                                        touched
-                                                                            .quotation?.[
-                                                                            index
-                                                                        ]
-                                                                            ?.description
+                                                                        Boolean(
+                                                                            errors.quotation?.[index]?.description &&
+                                                                            touched.quotation?.[index]?.description
+                                                                        )
                                                                     }
                                                                     errorMessage={
-                                                                        errors
-                                                                            .quotation?.[
-                                                                            index
-                                                                        ]
-                                                                            ?.description
+                                                                        touched.quotation?.[index]?.description &&
+                                                                        errors.quotation?.[index]?.description
                                                                     }
                                                                 >
                                                                     <Field
@@ -368,6 +423,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                                                         placeholder="Item description"
                                                                         component={Textarea}
                                                                         textAreaClassName="min-h-[80px]"
+                                                                        onBlur={handleBlur}
                                                                     />
                                                                 </FormItem>
                                                             </div>
@@ -399,23 +455,14 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                                                 <FormItem
                                                                     label="Unit of Measurement"
                                                                     invalid={
-                                                                        !!errors
-                                                                            .quotation?.[
-                                                                            index
-                                                                        ]
-                                                                            ?.unitOfMeasurement &&
-                                                                        touched
-                                                                            .quotation?.[
-                                                                            index
-                                                                        ]
-                                                                            ?.unitOfMeasurement
+                                                                        Boolean(
+                                                                            errors.quotation?.[index]?.unitOfMeasurement &&
+                                                                            touched.quotation?.[index]?.unitOfMeasurement
+                                                                        )
                                                                     }
                                                                     errorMessage={
-                                                                        errors
-                                                                            .quotation?.[
-                                                                            index
-                                                                        ]
-                                                                            ?.unitOfMeasurement
+                                                                        touched.quotation?.[index]?.unitOfMeasurement &&
+                                                                        errors.quotation?.[index]?.unitOfMeasurement
                                                                     }
                                                                 >
                                                                     <Select
@@ -433,6 +480,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                                                                 option?.value,
                                                                             )
                                                                         }
+                                                                        onBlur={handleBlur}
                                                                     />
                                                                 </FormItem>
                                                             </div>
@@ -441,34 +489,24 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                                                 <FormItem
                                                                     label="Quantity"
                                                                     invalid={
-                                                                        !!errors
-                                                                            .quotation?.[
-                                                                            index
-                                                                        ]
-                                                                            ?.quantity &&
-                                                                        touched
-                                                                            .quotation?.[
-                                                                            index
-                                                                        ]?.quantity
+                                                                        Boolean(
+                                                                            errors.quotation?.[index]?.quantity &&
+                                                                            touched.quotation?.[index]?.quantity
+                                                                        )
                                                                     }
                                                                     errorMessage={
-                                                                        errors
-                                                                            .quotation?.[
-                                                                            index
-                                                                        ]?.quantity
+                                                                        touched.quotation?.[index]?.quantity &&
+                                                                        errors.quotation?.[index]?.quantity
                                                                     }
                                                                 >
                                                                     <Field
                                                                         type="number"
                                                                         name={`quotation[${index}].quantity`}
                                                                         placeholder="Qty"
-                                                                        component={
-                                                                            Input
-                                                                        }
+                                                                        component={Input}
                                                                         min={0}
-                                                                        onChange={
-                                                                            handleFieldChange
-                                                                        }
+                                                                        onChange={handleFieldChange}
+                                                                        onBlur={handleBlur}
                                                                     />
                                                                 </FormItem>
                                                             </div>
@@ -477,34 +515,24 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                                                 <FormItem
                                                                     label="Unit Price"
                                                                     invalid={
-                                                                        !!errors
-                                                                            .quotation?.[
-                                                                            index
-                                                                        ]
-                                                                            ?.unitPrice &&
-                                                                        touched
-                                                                            .quotation?.[
-                                                                            index
-                                                                        ]?.unitPrice
+                                                                        Boolean(
+                                                                            errors.quotation?.[index]?.unitPrice &&
+                                                                            touched.quotation?.[index]?.unitPrice
+                                                                        )
                                                                     }
                                                                     errorMessage={
-                                                                        errors
-                                                                            .quotation?.[
-                                                                            index
-                                                                        ]?.unitPrice
+                                                                        touched.quotation?.[index]?.unitPrice &&
+                                                                        errors.quotation?.[index]?.unitPrice
                                                                     }
                                                                 >
                                                                     <Field
                                                                         type="number"
                                                                         name={`quotation[${index}].unitPrice`}
                                                                         placeholder="Price"
-                                                                        component={
-                                                                            Input
-                                                                        }
+                                                                        component={Input}
                                                                         min={0}
-                                                                        onChange={
-                                                                            handleFieldChange
-                                                                        }
+                                                                        onChange={handleFieldChange}
+                                                                        onBlur={handleBlur}
                                                                     />
                                                                 </FormItem>
                                                             </div>
@@ -513,32 +541,21 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                                                 <FormItem label="Total">
                                                                     <Input
                                                                         readOnly
-                                                                        value={
-                                                                            item.total
-                                                                        }
+                                                                        value={item.total}
                                                                         placeholder="Total"
                                                                     />
                                                                 </FormItem>
                                                             </div>
 
                                                             <div className="md:col-span-1 flex justify-end">
-                                                                {values
-                                                                    .quotation
-                                                                    .length >
-                                                                    1 && (
+                                                                {values.quotation.length > 1 && (
                                                                     <Button
                                                                         type="button"
                                                                         size="sm"
                                                                         variant="plain"
                                                                         color="red"
-                                                                        icon={
-                                                                            <HiOutlineTrash />
-                                                                        }
-                                                                        onClick={() =>
-                                                                            remove(
-                                                                                index,
-                                                                            )
-                                                                        }
+                                                                        icon={<HiOutlineTrash />}
+                                                                        onClick={() => remove(index)}
                                                                     />
                                                                 )}
                                                             </div>
@@ -569,49 +586,130 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                 </AdaptableCard>
 
                                 <AdaptableCard divider className="mb-4">
+                                    <h5>Scope of Work</h5>
+                                    <p className="mb-6">
+                                        Detailed description of the work to be performed
+                                    </p>
+
+                                    <FieldArray name="scopeOfWork">
+                                        {({ push, remove }) => (
+                                            <div className="space-y-4">
+                                                {values.scopeOfWork.map(
+                                                    (scope, index) => (
+                                                        <div
+                                                            key={index}
+                                                            className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end border-b pb-4"
+                                                        >
+                                                            <div className="md:col-span-11">
+                                                                <FormItem
+                                                                    label={`Scope of Work ${index + 1}`}
+                                                                    invalid={
+                                                                        Boolean(
+                                                                            errors.scopeOfWork?.[index]?.description &&
+                                                                            touched.scopeOfWork?.[index]?.description
+                                                                        )
+                                                                    }
+                                                                    errorMessage={
+                                                                        touched.scopeOfWork?.[index]?.description &&
+                                                                        errors.scopeOfWork?.[index]?.description
+                                                                    }
+                                                                >
+                                                                    <Field
+                                                                        name={`scopeOfWork[${index}].description`}
+                                                                        placeholder="Enter the scope of work"
+                                                                        component={Input}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormItem>
+                                                            </div>
+
+                                                            <div className="md:col-span-1 flex justify-end">
+                                                                {values.scopeOfWork.length > 1 && (
+                                                                    <Button
+                                                                        type="button"
+                                                                        size="sm"
+                                                                        variant="plain"
+                                                                        color="red"
+                                                                        icon={<HiOutlineTrash />}
+                                                                        onClick={() => remove(index)}
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ),
+                                                )}
+
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="twoTone"
+                                                    icon={<HiOutlinePlus />}
+                                                    onClick={() =>
+                                                        push({
+                                                            description: '',
+                                                        })
+                                                    }
+                                                >
+                                                    Add Scope of Work
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </FieldArray>
+                                </AdaptableCard>
+
+                                <AdaptableCard divider className="mb-4">
                                     <h5>Terms and Conditions</h5>
                                     <p className="mb-6">
                                         List of terms and conditions for the quotation
                                     </p>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <FormItem
-            label="Terms 1"
-            invalid={!!errors.termsCategory && touched.termsCategory}
-            errorMessage={errors.termsCategory}
-        >
-            <Select
-                name="termsCategory"
-                options={termsCategories}
-                placeholder="Select category"
-                value={termsCategories.find(
-                    (cat) => cat.value === values.termsCategory
-                )}
-                onChange={(option) =>
-                    setFieldValue('termsCategory', option?.value)
-                }
-            />
-        </FormItem>
+                                        <FormItem
+                                            label="Terms 1"
+                                            invalid={Boolean(
+                                                errors.termsCategory && touched.termsCategory
+                                            )}
+                                            errorMessage={
+                                                touched.termsCategory && errors.termsCategory
+                                            }
+                                        >
+                                            <Select
+                                                name="termsCategory"
+                                                options={termsCategories}
+                                                placeholder="Select category"
+                                                value={termsCategories.find(
+                                                    (cat) => cat.value === values.termsCategory
+                                                )}
+                                                onChange={(option) =>
+                                                    setFieldValue('termsCategory', option?.value)
+                                                }
+                                                onBlur={handleBlur}
+                                            />
+                                        </FormItem>
 
-        <FormItem
-            label="Terms 2"
-            invalid={!!errors.termsType && touched.termsType}
-            errorMessage={errors.termsType}
-        >
-            <Select
-                name="termsType"
-                options={termsTypes}
-                placeholder="Select type"
-                value={termsTypes.find(
-                    (type) => type.value === values.termsType
-                )}
-                onChange={(option) =>
-                    setFieldValue('termsType', option?.value)
-                }
-            />
-        </FormItem>
-    </div>
-                
+                                        <FormItem
+                                            label="Terms 2"
+                                            invalid={Boolean(
+                                                errors.termsType && touched.termsType
+                                            )}
+                                            errorMessage={
+                                                touched.termsType && errors.termsType
+                                            }
+                                        >
+                                            <Select
+                                                name="termsType"
+                                                options={termsTypes}
+                                                placeholder="Select type"
+                                                value={termsTypes.find(
+                                                    (type) => type.value === values.termsType
+                                                )}
+                                                onChange={(option) =>
+                                                    setFieldValue('termsType', option?.value)
+                                                }
+                                                onBlur={handleBlur}
+                                            />
+                                        </FormItem>
+                                    </div>
 
                                     <FieldArray name="termsAndConditions">
                                         {({ push, remove }) => (
@@ -624,55 +722,37 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                                         >
                                                             <div className="md:col-span-11">
                                                                 <FormItem
-                                                                    label={`Terms and conditions `}
-                                                                    // ${index + 1}
+                                                                    label={`Terms and conditions ${index + 1}`}
                                                                     invalid={
-                                                                        !!errors
-                                                                            .termsAndConditions?.[
-                                                                            index
-                                                                        ]
-                                                                            ?.description &&
-                                                                        touched
-                                                                            .termsAndConditions?.[
-                                                                            index
-                                                                        ]
-                                                                            ?.description
+                                                                        Boolean(
+                                                                            errors.termsAndConditions?.[index]?.description &&
+                                                                            touched.termsAndConditions?.[index]?.description
+                                                                        )
                                                                     }
                                                                     errorMessage={
-                                                                        errors
-                                                                            .termsAndConditions?.[
-                                                                            index
-                                                                        ]
-                                                                            ?.description
+                                                                        touched.termsAndConditions?.[index]?.description &&
+                                                                        errors.termsAndConditions?.[index]?.description
                                                                     }
                                                                 >
                                                                     <Field
                                                                         name={`termsAndConditions[${index}].description`}
-                                                                        placeholder="Enter the new termsAndConditions"
+                                                                        placeholder="Enter the terms and conditions"
                                                                         component={Textarea}
                                                                         textAreaClassName="min-h-[60px]"
+                                                                        onBlur={handleBlur}
                                                                     />
                                                                 </FormItem>
                                                             </div>
 
                                                             <div className="md:col-span-1 flex justify-end">
-                                                                {values
-                                                                    .termsAndConditions
-                                                                    .length >
-                                                                    1 && (
+                                                                {values.termsAndConditions.length > 1 && (
                                                                     <Button
                                                                         type="button"
                                                                         size="sm"
                                                                         variant="plain"
                                                                         color="red"
-                                                                        icon={
-                                                                            <HiOutlineTrash />
-                                                                        }
-                                                                        onClick={() =>
-                                                                            remove(
-                                                                                index,
-                                                                            )
-                                                                        }
+                                                                        icon={<HiOutlineTrash />}
+                                                                        onClick={() => remove(index)}
                                                                     />
                                                                 )}
                                                             </div>
@@ -696,8 +776,8 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>(
                                             </div>
                                         )}
                                     </FieldArray>
-                                    
                                 </AdaptableCard>
+
                                 <StickyFooter
                                     className="-mx-8 px-8 flex items-center justify-between py-4"
                                     stickyClass="border-t bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"

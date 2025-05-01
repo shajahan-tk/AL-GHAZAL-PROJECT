@@ -22,6 +22,9 @@ const { authenticatedEntryPath } = appConfig
 
 const AllRoutes = (props: AllRoutesProps) => {
     const userAuthority = useAppSelector((state) => state.auth.user.authority)
+    console.log("route authority",userAuthority);
+    
+
 
     return (
         <Routes>

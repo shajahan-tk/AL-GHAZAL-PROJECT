@@ -20,19 +20,19 @@ const appsRoute: Routes = [
         key: 'appsEstimationCreation.estimationCreation',
         path: `${APP_PREFIX_PATH}/create-estimation`,
         component: lazy(() => import('@/views/estimation/estimationcreation/EstimationCreations')),
-        authority: [ADMIN, USER,SUPERADMIN],
+        authority: [ADMIN, USER,SUPERADMIN,ENGINEER],
     },
     {
         key: 'appsEstimation.estimationView',
         path: `${APP_PREFIX_PATH}/estimation/:id`,
         component: lazy(() => import('@/views/estimation/estimationView/EstimationView')),
-        authority: [ADMIN, USER,SUPERADMIN],
+        authority: [ADMIN, USER,SUPERADMIN,ENGINEER],
     },
     {
         key: 'appsEstimationView.estimationView',
         path: `${APP_PREFIX_PATH}/estimation-view/:id`,
         component: lazy(() => import('@/views/estimation/estimationViews/EstimationView')),
-        authority: [ADMIN, USER,SUPERADMIN],
+        authority: [ADMIN, USER,SUPERADMIN,ENGINEER],
     },    
     {
         key: 'appsUsers.userNew',
@@ -105,11 +105,11 @@ const appsRoute: Routes = [
         key: 'appsProjectView.ProjectView',
         path: `${APP_PREFIX_PATH}/project-view/:id`,
         component: lazy(() => import('@/views/ProjectView/ProjectView/Wallets')),
-        authority: [ADMIN, USER,SUPERADMIN],
+        authority: [ADMIN, USER,SUPERADMIN,ENGINEER],
     },
     {
         key: 'appsQuotation.quotationNew',
-        path: `${APP_PREFIX_PATH}/quotation-new`,
+        path: `${APP_PREFIX_PATH}/quotation-new/:projectId`,
         component: lazy(() => import('@/views/quotation/quotationcreation/QuotationCreations')),
         authority: [ADMIN, USER,SUPERADMIN],
     },
@@ -124,6 +124,12 @@ const appsRoute: Routes = [
         path: `${APP_PREFIX_PATH}/quotation-view`,
         component: lazy(() => import('@/views/quotation/quotationview/QuotationView')),
         authority: [ADMIN, USER,SUPERADMIN],
+    },
+    {
+        key: 'appsPublicView.PublicView',
+        path: `${APP_PREFIX_PATH}/public-view`,
+        component: lazy(() => import('@/views/publicview/publicviews/PublicView')),
+        authority: [ADMIN, USER,SUPERADMIN,ENGINEER],
     },
     
     

@@ -53,6 +53,12 @@ type Estimation = {
         firstName: string
         lastName: string
     }
+    client:{
+        clientName:string
+        clientAddress:string 
+        mobileNumber:string
+        pincode:string
+    }
     profit: number
     createdAt: string
     updatedAt: string
@@ -133,14 +139,14 @@ const EstimationContent = () => {
                             <Logo className="mb-3" mode={mode} />
                             <address className="not-italic">
                                 <div>
-                                    <h5>M/s IMBAAD</h5>
+                                    <h5>{data.client.clientName}</h5>
                                     <br />
-                                    <span>9498 Harvard Street</span>
+                                    <span>{data.client.clientAddress}</span>
                                     <br />
-                                    <span>Fairfield, Chicago Town 06824</span>
+                                    <span>pin : {data.client.pincode}</span>
                                     <br />
-                                    <abbr title="Phone">Phone:</abbr>
-                                    <span>(123) 456-7890</span>
+                                    <abbr title="Phone">Phone : </abbr>
+                                    <span> {data.client.mobileNumber}</span>
                                 </div>
                             </address>
                         </div>
