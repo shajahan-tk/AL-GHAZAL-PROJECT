@@ -38,6 +38,8 @@ const validationSchema = Yup.object().shape({
     .nullable(),
   trnNumber: Yup.string()
     .required('TRN Number Required'),
+  accountNumber: Yup.string()
+    .required('Account Number Required'),
 })
 
 type InitialData = {
@@ -48,6 +50,7 @@ type InitialData = {
   mobileNumber?: string
   telephoneNumber?: string | null
   trnNumber?: string
+  accountNumber?:string
 }
 
 export type FormModel = InitialData
@@ -73,6 +76,7 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
           mobileNumber: '',
           telephoneNumber: null,
           trnNumber: '',
+          accountNumber:'',
         },
         onFormSubmit,
         onDiscard,
@@ -181,6 +185,64 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
                         autoComplete="off"
                         name="trnNumber"
                         placeholder="TRN Number"
+                        component={Input}
+                      />
+                    </FormItem>
+                    <FormItem
+                      label="Account Number"
+                      invalid={!!(errors.accountNumber && touched.accountNumber)}
+                      errorMessage={errors.accountNumber}
+                    >
+                      
+                      
+                      <Field
+                        type="text"
+                        autoComplete="off"
+                        name="accountNumber"
+                        placeholder="Account Number"
+                        component={Input}
+                      />
+                    </FormItem>
+                    <FormItem
+                      label="Site"
+                      invalid={!!(errors.accountNumber && touched.accountNumber)}
+                      errorMessage={errors.accountNumber}
+                    >
+                      
+                      
+                      <Field
+                        type="text"
+                        autoComplete="off"
+                        name="accountNumber"
+                        placeholder="Site"
+                        component={Input}
+                      />
+                    </FormItem>
+                    <FormItem
+                      label="Appartment"
+                      invalid={!!(errors.accountNumber && touched.accountNumber)}
+                      errorMessage={errors.accountNumber}
+                    >
+                      
+                      
+                      <Field
+                        type="text"
+                        autoComplete="off"
+                        name="accountNumber"
+                        placeholder="Appartment"
+                        component={Input}
+                      />
+                    </FormItem>
+                    <FormItem
+                      label="Others"
+                      invalid={!!(errors.accountNumber && touched.accountNumber)}
+                      errorMessage={errors.accountNumber}
+                    >
+                      <Field
+                        type="text"
+                        autoComplete="off"
+                        name="accountNumber"
+                        placeholder="Others"
                         component={Input}
                       />
                     </FormItem>

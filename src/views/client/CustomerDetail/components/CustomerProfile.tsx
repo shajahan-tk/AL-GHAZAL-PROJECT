@@ -98,6 +98,7 @@ const CustomerProfile = () => {
             mobileNumber:response?.data?.mobileNumber,
             telephoneNumber:response?.data?.telephoneNumber,
             trnNumber:response?.data?.trnNumber,
+            accountNumber:response?.data?.accountNumber,
         })
     }
 
@@ -126,6 +127,11 @@ const CustomerProfile = () => {
                         title="Trn Number"
                         value={data?.trnNumber}
                     />
+                    <CustomerInfoField
+                        title="Account Number"
+                        value={data?.accountNumber || 'number'}
+                    />
+                    
                     <CustomerInfoField
                         title="Pincode"
                         value={data?.pincode}

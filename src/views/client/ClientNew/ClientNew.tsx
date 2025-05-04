@@ -87,6 +87,7 @@ const ClientNew = () => {
                 mobileNumber: '',
                 telephoneNumber: null,
                 trnNumber: '',
+                accountNumber:'',
             }}
             onFormSubmit={handleFormSubmit}
             onDiscard={handleDiscard}

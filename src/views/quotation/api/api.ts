@@ -157,36 +157,7 @@ export const generateQuotationPdf = async (id: string) => {
     }
 }
 
-export const downloadQuotationPdf = async (id: string, fileName: string) => {
-    try {
-        const pdfData = await generateQuotationPdf(id);
-        
-        if (!pdfData || pdfData.byteLength === 0) {
-            throw new Error('Received empty PDF data');
-        }
 
-        const blob = new Blob([pdfData], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName || `quotation-${id}.pdf`;
-        link.style.display = 'none';
-        
-        document.body.appendChild(link);
-        link.click();
-        
-        // Cleanup
-        setTimeout(() => {
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        }, 100);
-        
-    } catch (error) {
-        console.error('Quotation PDF Download Error:', error);
-        throw error;
-    }
-}
 
 export const uploadQuotationItemImage = async (quotationId: string, itemIndex: number, file: File) => {
     try {
@@ -208,3 +179,43 @@ export const uploadQuotationItemImage = async (quotationId: string, itemIndex: n
         throw error;
     }
 }
+
+
+
+
+export const downloadQuotationnPdf = async (id: string, fileName: string) => {
+    try {
+      const response = await BaseService.get(`/quotation/${id}/generate-pdf`, {
+        responseType: 'arraybuffer',
+        headers: {
+          'Accept': 'application/pdf'
+        }
+      });
+  
+      // Verify response contains data
+      if (!response.data || response.data.byteLength === 0) {
+        throw new Error('Received empty PDF data');
+      }
+  
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName || `estimation-${id}.pdf`;
+      link.style.display = 'none';
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+      
+    } catch (error) {
+      console.error('PDF Download Error:', error);
+      throw error;
+    }
+  };

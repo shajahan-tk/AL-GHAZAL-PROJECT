@@ -196,41 +196,62 @@ const appsNavigationConfig: NavigationTree[] = [
                     
                 ],
             },
-            {
-                key: 'apps.quotation',
-                path: '',
-                title: 'quotation',
-                translateKey: 'nav.appsQuotation.quotation',
-                icon: 'crm',
-                type: NAV_ITEM_TYPE_COLLAPSE,
-                authority: [ADMIN, USER,SUPERADMIN],
-                subMenu: [
+            // {
+            //     key: 'apps.quotation',
+            //     path: '',
+            //     title: 'quotation',
+            //     translateKey: 'nav.appsQuotation.quotation',
+            //     icon: 'crm',
+            //     type: NAV_ITEM_TYPE_COLLAPSE,
+            //     authority: [ADMIN, USER,SUPERADMIN],
+            //     subMenu: [
                     
-                    {
-                        key: 'appsQuotation.quotationNew',
-                        path: `${APP_PREFIX_PATH}/quotation-new`,
-                        title: 'New Quotation',
-                        translateKey: 'nav.appsQuotation.quotationNew',
-                        icon: '',
-                        type: NAV_ITEM_TYPE_ITEM,
-                        authority: [ADMIN, USER,SUPERADMIN],
-                        subMenu: [],
-                    },
-                    {
-                        key: 'appsQuotationView.QuotationView',
-                        path: `${APP_PREFIX_PATH}/quotation-view`,
-                        title: 'Quotation View',
-                        translateKey: 'nav.appsQuotationView.QuotationView',
-                        icon: '',
-                        type: NAV_ITEM_TYPE_ITEM,
-                        authority: [ADMIN, USER,SUPERADMIN],
-                        subMenu: [],
-                    },
+            //         {
+            //             key: 'appsQuotation.quotationNew',
+            //             path: `${APP_PREFIX_PATH}/quotation-new`,
+            //             title: 'New Quotation',
+            //             translateKey: 'nav.appsQuotation.quotationNew',
+            //             icon: '',
+            //             type: NAV_ITEM_TYPE_ITEM,
+            //             authority: [ADMIN, USER,SUPERADMIN],
+            //             subMenu: [],
+            //         },
+            //         {
+            //             key: 'appsQuotationView.QuotationView',
+            //             path: `${APP_PREFIX_PATH}/quotation-view`,
+            //             title: 'Quotation View',
+            //             translateKey: 'nav.appsQuotationView.QuotationView',
+            //             icon: '',
+            //             type: NAV_ITEM_TYPE_ITEM,
+            //             authority: [ADMIN, USER,SUPERADMIN],
+            //             subMenu: [],
+            //         },
                   
                     
-                ],
-            },
-           
+            //     ],
+            // },
+
+            {
+                key: 'apps.lpo',
+                path: `${APP_PREFIX_PATH}/lpo`,
+                title: 'LPO',
+                translateKey: 'LPO',
+                icon: 'project',
+                type: NAV_ITEM_TYPE_ITEM,
+                authority: [ADMIN, USER,SUPERADMIN],
+                subMenu: [],
+   },
+   {
+    key: 'apps.workprogress',
+    path: `${APP_PREFIX_PATH}/workprogress`,
+    title: 'Work Progress',
+    translateKey: 'workprogress',
+    icon: 'graph',
+    type: NAV_ITEM_TYPE_ITEM,
+    authority: [ADMIN, USER,SUPERADMIN],
+    subMenu: [],
+},
+         
         ],
     },
 ]

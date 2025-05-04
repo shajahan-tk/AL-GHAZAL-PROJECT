@@ -58,7 +58,7 @@ const ActionColumn = ({ row }: { row: Client }) => {
     }
 
     return (
-        <div className="flex justify-end text-lg">
+        <div className="flex justify-start text-lg">
                         <span
                             className={`cursor-pointer p-2 hover:${textTheme}`}
                             onClick={onView}
@@ -71,12 +71,12 @@ const ActionColumn = ({ row }: { row: Client }) => {
             >
                 <HiOutlinePencil />
             </span>
-            <span
+            {/* <span
                 className="cursor-pointer p-2 hover:text-red-500"
                 onClick={onDelete}
             >
                 <HiOutlineTrash />
-            </span>
+            </span> */}
         </div>
     )
 }

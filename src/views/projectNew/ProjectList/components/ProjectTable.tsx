@@ -45,8 +45,8 @@ const projectStatusColor = {
     },
     inactive: {
         label: 'Inactive',
-        dotClass: 'bg-red-500',
-        textClass: 'text-red-500',
+        dotClass: 'bg-green-500',
+        textClass: 'text-green-500',
     },
     completed: {
         label: 'Completed',
@@ -72,7 +72,7 @@ const ActionColumn = ({ row }: { row: Project }) => {
     }
 
     return (
-        <div className="flex justify-end text-lg">
+        <div className="flex justify-start text-lg">
             <span
                 className={`cursor-pointer p-2 hover:${textTheme}`}
                 onClick={onView}
@@ -85,12 +85,12 @@ const ActionColumn = ({ row }: { row: Project }) => {
             >
                 <HiOutlinePencil />
             </span>
-            <span
+            {/* <span
                 className="cursor-pointer p-2 hover:text-red-500"
                 onClick={onDelete}
             >
                 <HiOutlineTrash />
-            </span>
+            </span> */}
         </div>
     )
 }
@@ -160,7 +160,8 @@ const ProjectTable = () => {
                         <div className="flex items-center gap-2">
                             <Badge className={statusInfo.dotClass} />
                             <span className={`capitalize font-semibold ${statusInfo.textClass}`}>
-                                {statusInfo.label}
+                                {props.row.original?.status
+                                }
                             </span>
                         </div>
                     )

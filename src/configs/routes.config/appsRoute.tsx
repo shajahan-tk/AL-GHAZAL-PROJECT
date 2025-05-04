@@ -121,7 +121,7 @@ const appsRoute: Routes = [
     },
     {
         key: 'appsQuotationView.QuotationView',
-        path: `${APP_PREFIX_PATH}/quotation-view`,
+        path: `${APP_PREFIX_PATH}/quotation-view/:projectId`,
         component: lazy(() => import('@/views/quotation/quotationview/QuotationView')),
         authority: [ADMIN, USER,SUPERADMIN],
     },
@@ -130,6 +130,18 @@ const appsRoute: Routes = [
         path: `${APP_PREFIX_PATH}/public-view`,
         component: lazy(() => import('@/views/publicview/publicviews/PublicView')),
         authority: [ADMIN, USER,SUPERADMIN,ENGINEER],
+    },
+    {
+        key: 'apps.lpo',
+        path: `${APP_PREFIX_PATH}/lpo`,
+        component: lazy(() => import('@/views/lpo/lpocreate/LpoForm/LpoForm')),
+        authority: [ADMIN, USER,SUPERADMIN],
+    },
+    {
+        key: 'apps.workprogress',
+        path: `${APP_PREFIX_PATH}/workprogress`,
+        component: lazy(() => import('@/views/workprogress/progress/progress/Progress')),
+        authority: [ADMIN, USER,SUPERADMIN],
     },
     
     

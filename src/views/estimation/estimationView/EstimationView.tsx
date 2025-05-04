@@ -293,9 +293,9 @@ const EstimationPDF = ({ data }: { data: Estimation }) => (
           <Text style={styles.tableCell}>Unit Price</Text>
           <Text style={styles.tableCell}>Total</Text>
         </View>
-        {data.materials.map((material, index) => (
+        {data?.materials.map((material, index) => (
           <View key={index} style={styles.tableRow}>
-            <Text style={[styles.tableCell, { flex: 3 }]}>{material.subjectMaterial}</Text>
+            <Text style={[styles.tableCell, { flex: 3 }]}>{material?.subjectMaterial}</Text>
             <Text style={styles.tableCell}>{material.quantity}</Text>
             <Text style={styles.tableCell}>{material.unitPrice.toFixed(2)}</Text>
             <Text style={styles.tableCell}>{material.total.toFixed(2)}</Text>
@@ -303,7 +303,7 @@ const EstimationPDF = ({ data }: { data: Estimation }) => (
         ))}
         <View style={styles.summaryRow}>
           <Text>Total Materials:</Text>
-          <Text>{data.totalMaterials.toFixed(2)}</Text>
+          <Text>{data?.totalMaterials.toFixed(2)}</Text>
         </View>
       </View>
 
@@ -316,7 +316,7 @@ const EstimationPDF = ({ data }: { data: Estimation }) => (
           <Text style={styles.tableCell}>Rate</Text>
           <Text style={styles.tableCell}>Total</Text>
         </View>
-        {data.labourCharges.map((labour, index) => (
+        {data?.labourCharges.map((labour, index) => (
           <View key={index} style={styles.tableRow}>
             <Text style={[styles.tableCell, { flex: 3 }]}>{labour.designation}</Text>
             <Text style={styles.tableCell}>{labour.quantityDays}</Text>
@@ -326,7 +326,7 @@ const EstimationPDF = ({ data }: { data: Estimation }) => (
         ))}
         <View style={styles.summaryRow}>
           <Text>Total Labour:</Text>
-          <Text>{data.totalLabour.toFixed(2)}</Text>
+          <Text>{data?.totalLabour.toFixed(2)}</Text>
         </View>
       </View>
 
@@ -339,7 +339,7 @@ const EstimationPDF = ({ data }: { data: Estimation }) => (
           <Text style={styles.tableCell}>Unit Price</Text>
           <Text style={styles.tableCell}>Total</Text>
         </View>
-        {data.termsAndConditions.map((term, index) => (
+        {data?.termsAndConditions.map((term, index) => (
           <View key={index} style={styles.tableRow}>
             <Text style={[styles.tableCell, { flex: 3 }]}>{term.miscellaneous}</Text>
             <Text style={styles.tableCell}>{term.quantity}</Text>
@@ -358,24 +358,24 @@ const EstimationPDF = ({ data }: { data: Estimation }) => (
         <Text style={styles.sectionHeader}>Summary</Text>
         <View style={styles.row}>
           <Text style={styles.label}>Estimated Amount:</Text>
-          <Text style={styles.value}>{data.estimatedAmount.toFixed(2)}</Text>
+          <Text style={styles.value}>{data?.estimatedAmount.toFixed(2)}</Text>
         </View>
-        {data.quotationAmount && (
+        {data?.quotationAmount && (
           <View style={styles.row}>
             <Text style={styles.label}>Quotation Amount:</Text>
-            <Text style={styles.value}>{data.quotationAmount.toFixed(2)}</Text>
+            <Text style={styles.value}>{data?.quotationAmount.toFixed(2)}</Text>
           </View>
         )}
-        {data.commissionAmount && (
+        {data?.commissionAmount && (
           <View style={styles.row}>
             <Text style={styles.label}>Commission Amount:</Text>
-            <Text style={styles.value}>{data.commissionAmount.toFixed(2)}</Text>
+            <Text style={styles.value}>{data?.commissionAmount.toFixed(2)}</Text>
           </View>
         )}
-        {data.profit !== undefined && (
+        {data?.profit !== undefined && (
           <View style={styles.row}>
             <Text style={styles.label}>Profit:</Text>
-            <Text style={styles.value}>{data.profit.toFixed(2)}</Text>
+            <Text style={styles.value}>{data?.profit.toFixed(2)}</Text>
           </View>
         )}
       </View>
@@ -746,19 +746,19 @@ const EstimationView = () => {
                   {data?.quotationAmount && (
                     <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm">
                       <h5 className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-2">Quotation Amount</h5>
-                      <p className="text-lg font-bold">{data.quotationAmount.toFixed(2)}</p>
+                      <p className="text-lg font-bold">{data?.quotationAmount.toFixed(2)}</p>
                     </div>
                   )}
                   {data?.commissionAmount && (
                     <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm">
                       <h5 className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-2">Commission Amount</h5>
-                      <p className="text-lg font-bold">{data.commissionAmount.toFixed(2)}</p>
+                      <p className="text-lg font-bold">{data?.commissionAmount.toFixed(2)}</p>
                     </div>
                   )}
                   {data?.profit !== undefined && (
                     <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm">
                       <h5 className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-2">Profit</h5>
-                      <p className="text-lg font-bold">{data.profit.toFixed(2)}</p>
+                      <p className="text-lg font-bold">{data?.profit.toFixed(2)}</p>
                     </div>
                   )}
                 </div>

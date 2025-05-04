@@ -16,6 +16,7 @@ import DatePicker from '@/components/ui/DatePicker';
 import Select from '@/components/ui/Select';
 import { createQuotation, getQuotationByProject, updateQuotation } from '../api/api';
 import { APP_PREFIX_PATH } from '@/constants/route.constant';
+import { Upload } from '@/components/ui';
 
 // Constants for dropdown options
 const measurementUnits = [
@@ -27,11 +28,18 @@ const measurementUnits = [
 
 const termsCategories = [
   { value: 'The work will be started after receiving the PO', label: 'The work will be started after receiving the PO' },
+  { value: 'The work will be started after the confirmation of client', label: 'The work will be started after receiving the PO' },
   // ... other categories
 ];
 
+
 const termsTypes = [
+  { value: 'The payment as per accounting terms 90 days', label: 'The payment as per accounting terms 90 days' },
+  { value: 'The payment as per accounting terms 60 days', label: 'The payment as per accounting terms 60 days' },
+  { value: 'The payment as per accounting terms 30 days', label: 'The payment as per accounting terms 30 days' },
   { value: '50% advance and 50% after completion of work', label: '50% advance and 50% after completion of work' },
+  { value: '50% advance before starting the work and 30% work on progress and 20% after completion of work', label: '50% advance before starting the work and 30% work on progress and 20% after completion of work' },
+  { value: 'Cash on delivery', label: 'Cash on delivery' },
   // ... other types
 ];
 
@@ -221,7 +229,7 @@ const QuotationForm = forwardRef<FormikRef, QuotationFormProps>((props, ref) => 
           { placement: 'top-center' }
         );
       }
-      navigate(`${APP_PREFIX_PATH}/projects/${projectId}`);
+      navigate(-1)
     } catch (error) {
       console.error(`Error ${quotationId ? 'updating' : 'creating'} quotation:`, error);
       toast.push(
@@ -298,7 +306,7 @@ const QuotationForm = forwardRef<FormikRef, QuotationFormProps>((props, ref) => 
               <AdaptableCard divider className="mb-4">
                 <h5>Quotation Details</h5>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormItem label="Quotation Number">
+                  {/* <FormItem label="Quotation Number">
                     <Field name="quotationNumber" type="text" readOnly component={Input} />
                   </FormItem>
                   <FormItem label="Date">
@@ -320,7 +328,7 @@ const QuotationForm = forwardRef<FormikRef, QuotationFormProps>((props, ref) => 
                         />
                       )}
                     </Field>
-                  </FormItem>
+                  </FormItem> */}
                 </div>
               </AdaptableCard>
 
@@ -385,6 +393,7 @@ const QuotationForm = forwardRef<FormikRef, QuotationFormProps>((props, ref) => 
                               as={Input}
                               name={`items[${index}].description`}
                               placeholder="Description"
+                              textArea={true}
                             />
                           </FormItem>
 
@@ -500,7 +509,7 @@ const QuotationForm = forwardRef<FormikRef, QuotationFormProps>((props, ref) => 
                                 />
                               </div>
                             )}
-                          </div>
+                          </div>  
                         </div>
                       ))}
 

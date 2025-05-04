@@ -56,7 +56,14 @@ const DocumentCard = ({
 
     const handleClick = () => {
         if (data.exists) {
-            navigate(data.viewRoute || data.route, { state: { projectId: id } })
+            if (data.type === 'quotation') {
+                // For quotation, navigate to view with projectId
+                navigate(`/app/quotation-view/${id}`)
+            } else {
+                navigate(data.viewRoute || data.route, {
+                    state: { projectId: id },
+                })
+            }
         } else {
             onAddClick(data.type)
         }
@@ -91,21 +98,15 @@ const DocumentCard = ({
                         {data.date && (
                             <p className="text-sm text-gray-500">{data.date}</p>
                         )}
-                        {data.type === 'estimation' && data.exists && (
-                            <Button
-                                className="mt-4"
-                                size="sm"
-                                variant="solid"
-                                icon={<HiOutlineEye />}
-                                onClick={() =>
-                                    navigate(data.viewRoute || '', {
-                                        state: { estimationId: data.id },
-                                    })
-                                }
-                            >
-                                View Estimation
-                            </Button>
-                        )}
+                        <Button
+                            className="mt-4"
+                            size="sm"
+                            variant="solid"
+                            icon={<HiOutlineEye />}
+                            onClick={handleClick}
+                        >
+                            {data.exists ? 'View' : 'Create'} {data.title}
+                        </Button>
                     </div>
                 </div>
             ) : (
@@ -492,14 +493,12 @@ const ProjectView = () => {
                 setProjectLoading(false)
 
                 const hasEstimation = !!data?.data?.estimationId
+                const hasQuotation = !!data?.data?.quotationId
 
                 const mockDocuments: Document[] = [
                     {
                         type: 'estimation',
                         title: 'Estimation',
-                        amount: hasEstimation ? 12500 : undefined,
-                        date: hasEstimation ? '2023-05-15' : undefined,
-                        icon: '/img/document-icons/estimate.png',
                         route: '/app/create-estimation',
                         viewRoute: hasEstimation
                             ? `/app/estimation-view/${data.data.estimationId}`
@@ -510,24 +509,26 @@ const ProjectView = () => {
                     {
                         type: 'quotation',
                         title: 'Quotation',
-                        icon: '/img/document-icons/quotation.png',
                         route: `/app/quotation-new/${id}`,
-                        exists: false,
+                        viewRoute: hasQuotation
+                            ? `/app/quotation-view/${id}`
+                            : undefined,
+                        exists: hasQuotation,
                         roles: ['finance', 'super_admin', 'admin'],
                     },
                     {
-                        type: 'invoice',
-                        title: 'Invoice',
+                        type: 'lpo',
+                        title: 'LPO',
                         icon: '/img/document-icons/invoice.png',
-                        route: '/app/invoices/new',
+                        route: '/app/lpo',
                         exists: false,
                         roles: ['finance', 'super_admin', 'admin'],
                     },
                     {
-                        type: 'workReport',
-                        title: 'Work Report',
+                        type: 'workProgress',
+                        title: 'Work Progress',
                         icon: '/img/document-icons/report.png',
-                        route: '/app/work-reports/new',
+                        route: '/app/workprogress',
                         exists: false,
                         roles: ['finance', 'super_admin', 'admin'],
                     },
@@ -674,19 +675,20 @@ const ProjectView = () => {
                                                 )}
                                             </div>
 
+                                            {/* Inside the Engineer Assignment Card */}
                                             <div className="flex items-center justify-between">
                                                 <span className="text-gray-600 dark:text-gray-300">
                                                     Checked:
                                                 </span>
                                                 <span
                                                     className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                        projectData?.checked
+                                                        projectData?.isChecked
                                                             ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                                                             : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                                                     }`}
                                                 >
-                                                    {projectData?.checked
-                                                        ? 'Yes'
+                                                    {projectData?.isChecked
+                                                        ? 'OK'
                                                         : 'No'}
                                                 </span>
                                             </div>
@@ -697,13 +699,13 @@ const ProjectView = () => {
                                                 </span>
                                                 <span
                                                     className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                        projectData?.approved
+                                                        projectData?.isApproved
                                                             ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                                                             : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                                                     }`}
                                                 >
-                                                    {projectData?.approved
-                                                        ? 'Yes'
+                                                    {projectData?.isApproved
+                                                        ? 'OK'
                                                         : 'No'}
                                                 </span>
                                             </div>
@@ -712,41 +714,47 @@ const ProjectView = () => {
                                 </Card>
 
                                 {/* Status Button */}
-                                {['super_admin', 'admin'].includes(role) && (
-                                    <Button
-                                        block
-                                        variant="solid"
-                                        onClick={openStatusModal}
-                                        className="mt-4"
-                                    >
-                                        Approve project
-                                    </Button>
-                                )}
+                                {['super_admin', 'admin'].includes(role) &&
+                                    !projectData?.isApproved && (
+                                        <Button
+                                            block
+                                            variant="solid"
+                                            onClick={openStatusModal}
+                                            className="mt-4"
+                                            disabled={!projectData?.isChecked}
+                                        >
+                                            Approve project
+                                        </Button>
+                                    )}
 
                                 {['super_admin', 'admin', 'engineer'].includes(
                                     role,
-                                ) && (
-                                    <Button
-                                        block
-                                        variant="solid"
-                                        onClick={() => {
-                                            if (id) {
-                                                openStatusModal2(id)
-                                            } else {
-                                                toast.push(
-                                                    <Notification
-                                                        title="Project ID is missing"
-                                                        type="danger"
-                                                    />,
-                                                    { placement: 'top-center' },
-                                                )
-                                            }
-                                        }}
-                                        className="mt-4"
-                                    >
-                                        Confirm check
-                                    </Button>
-                                )}
+                                ) &&
+                                    !projectData?.isChecked && (
+                                        <Button
+                                            block
+                                            variant="solid"
+                                            onClick={() => {
+                                                if (id) {
+                                                    openStatusModal2(id)
+                                                } else {
+                                                    toast.push(
+                                                        <Notification
+                                                            title="Project ID is missing"
+                                                            type="danger"
+                                                        />,
+                                                        {
+                                                            placement:
+                                                                'top-center',
+                                                        },
+                                                    )
+                                                }
+                                            }}
+                                            className="mt-4"
+                                        >
+                                            Confirm check
+                                        </Button>
+                                    )}
                             </div>
                         </>
                     )}

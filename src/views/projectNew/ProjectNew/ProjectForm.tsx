@@ -123,7 +123,7 @@ const ProjectForm = () => {
               placement: 'top-center',
           },
       )
-        navigate(-1)
+        navigate('/app/project-list')
       }
     }else{
       try {

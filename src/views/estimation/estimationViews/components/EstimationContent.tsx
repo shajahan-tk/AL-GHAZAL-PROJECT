@@ -139,21 +139,21 @@ const EstimationContent = () => {
                             <Logo className="mb-3" mode={mode} />
                             <address className="not-italic">
                                 <div>
-                                    <h5>{data.client.clientName}</h5>
+                                    <h5>{data?.client?.clientName}</h5>
                                     <br />
-                                    <span>{data.client.clientAddress}</span>
+                                    <span>{data?.client?.clientAddress}</span>
                                     <br />
-                                    <span>pin : {data.client.pincode}</span>
+                                    <span>pin : {data?.client?.pincode}</span>
                                     <br />
                                     <abbr title="Phone">Phone : </abbr>
-                                    <span> {data.client.mobileNumber}</span>
+                                    <span> {data?.client?.mobileNumber}</span>
                                 </div>
                             </address>
                         </div>
                         <div className="my-4">
                             <div className="mb-4">
-                                <h4>Estimation #{data.estimationNumber}</h4>
-                                <p>Project: {data.project.projectName}</p>
+                                <h4>Estimation #{data?.estimationNumber}</h4>
+                                <p>Project: {data?.project?.projectName}</p>
                             </div>
                             
                             {/* Date Information Section */}
@@ -162,35 +162,35 @@ const EstimationContent = () => {
                                     <HiCalendar className={`text-lg mr-2 ${textTheme}`} />
                                     <div>
                                         <div className="text-sm text-gray-500">Estimation Date</div>
-                                        <div>{formatDate(data.createdAt)}</div>
+                                        <div>{formatDate(data?.createdAt)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center">
                                     <HiCalendar className={`text-lg mr-2 ${textTheme}`} />
                                     <div>
                                         <div className="text-sm text-gray-500">Work Start Date</div>
-                                        <div>{formatDate(data.workStartDate)}</div>
+                                        <div>{formatDate(data?.workStartDate)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center">
                                     <HiCalendar className={`text-lg mr-2 ${textTheme}`} />
                                     <div>
                                         <div className="text-sm text-gray-500">Work End Date</div>
-                                        <div>{formatDate(data.workEndDate)}</div>
+                                        <div>{formatDate(data?.workEndDate)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center">
                                     <HiCalendar className={`text-lg mr-2 ${textTheme}`} />
                                     <div>
                                         <div className="text-sm text-gray-500">Valid Until</div>
-                                        <div>{formatDate(data.validUntil)}</div>
+                                        <div>{formatDate(data?.validUntil)}</div>
                                     </div>
                                 </div>
                                 <div className="flex items-center">
                                     <HiCalendar className={`text-lg mr-2 ${textTheme}`} />
                                     <div>
                                         <div className="text-sm text-gray-500">Payment Due By</div>
-                                        <div>{data.paymentDueBy} days</div>
+                                        <div>{data?.paymentDueBy} days</div>
                                     </div>
                                 </div>
                             </div>
@@ -207,20 +207,20 @@ const EstimationContent = () => {
                                     <th className="px-4 py-3 text-right">Quantity</th>
                                     <th className="px-4 py-3 text-right">Unit Price</th>
                                     <th className="px-4 py-3 text-right">Total</th>
-                                </tr>
+                                </tr>   
                             </thead>
                             <tbody>
-                                {data.materials.map((item, index) => (
+                                {data?.materials.map((item, index) => (
                                     <tr key={item._id} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}>
                                         <td className="px-4 py-3">{item.description}</td>
-                                        <td className="px-4 py-3 text-right">{item.quantity}</td>
-                                        <td className="px-4 py-3 text-right">{item.unitPrice.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-right">{item.total.toFixed(2)}</td>
+                                        <td className="px-4 py-3 text-right">{item?.quantity}</td>
+                                        <td className="px-4 py-3 text-right">{item?.unitPrice && item.unitPrice.toFixed(2)}</td>
+                                        <td className="px-4 py-3 text-right">{item?.total && item.total.toFixed(2)}</td>
                                     </tr>
                                 ))}
                                 <tr className="font-semibold bg-gray-100 dark:bg-gray-600">
                                     <td colSpan={3} className="px-4 py-3 text-right">Total Materials</td>
-                                    <td className="px-4 py-3 text-right">{totalMaterials.toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-right">{totalMaterials && totalMaterials.toFixed(2)}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -239,17 +239,17 @@ const EstimationContent = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {data.labour.map((item, index) => (
+                                {data?.labour.map((item, index) => (
                                     <tr key={item._id} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}>
-                                        <td className="px-4 py-3">{item.designation}</td>
-                                        <td className="px-4 py-3 text-right">{item.days}</td>
-                                        <td className="px-4 py-3 text-right">{item.price.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-right">{item.total.toFixed(2)}</td>
+                                        <td className="px-4 py-3">{item?.designation}</td>
+                                        <td className="px-4 py-3 text-right">{item?.days}</td>
+                                        <td className="px-4 py-3 text-right">{item?.price &&item.price.toFixed(2)}</td>
+                                        <td className="px-4 py-3 text-right">{item?.total && item.total.toFixed(2)}</td>
                                     </tr>
                                 ))}
                                 <tr className="font-semibold bg-gray-100 dark:bg-gray-600">
                                     <td colSpan={3} className="px-4 py-3 text-right">Total Labour</td>
-                                    <td className="px-4 py-3 text-right">{totalLabour.toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-right">{totalLabour && totalLabour.toFixed(2)}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -268,17 +268,17 @@ const EstimationContent = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {data.termsAndConditions.map((item, index) => (
+                                {data?.termsAndConditions.map((item, index) => (
                                     <tr key={item._id} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}>
-                                        <td className="px-4 py-3">{item.description}</td>
-                                        <td className="px-4 py-3 text-right">{item.quantity}</td>
-                                        <td className="px-4 py-3 text-right">{item.unitPrice.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-right">{item.total.toFixed(2)}</td>
+                                        <td className="px-4 py-3">{item?.description}</td>
+                                        <td className="px-4 py-3 text-right">{item?.quantity}</td>
+                                        <td className="px-4 py-3 text-right">{item?.unitPrice && item.unitPrice.toFixed(2)}</td>
+                                        <td className="px-4 py-3 text-right">{item?.total && item.total.toFixed(2)}</td>
                                     </tr>
                                 ))}
                                 <tr className="font-semibold bg-gray-100 dark:bg-gray-600">
                                     <td colSpan={3} className="px-4 py-3 text-right">Total Miscellaneous</td>
-                                    <td className="px-4 py-3 text-right">{totalTerms.toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-right">{totalTerms && totalTerms.toFixed(2)}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -291,19 +291,19 @@ const EstimationContent = () => {
                             <tbody>
                                 <tr className="bg-gray-50 dark:bg-gray-700">
                                     <td className="px-4 py-3 font-semibold">Estimated Amount</td>
-                                    <td className="px-4 py-3 text-right">{data.estimatedAmount.toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-right">{data?.estimatedAmount && data?.estimatedAmount.toFixed(2)}</td>
                                 </tr>
                                 <tr className="bg-white dark:bg-gray-800">
                                     <td className="px-4 py-3 font-semibold">Quotation Amount</td>
-                                    <td className="px-4 py-3 text-right">{data.quotationAmount.toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-right">{data?.quotationAmount &&data?.quotationAmount.toFixed(2)}</td>
                                 </tr>
                                 <tr className="bg-gray-100 dark:bg-gray-600">
                                     <td className="px-4 py-3 font-semibold">Commission Amount</td>
-                                    <td className="px-4 py-3 text-right">{data.commissionAmount.toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-right">{data?.commissionAmount &&data?.commissionAmount.toFixed(2)}</td>
                                 </tr>
                                 <tr className="bg-gray-200 dark:bg-gray-500">
                                     <td className="px-4 py-3 font-semibold">Profit</td>
-                                    <td className="px-4 py-3 text-right">{data.profit.toFixed(2)}</td>
+                                    <td className="px-4 py-3 text-right">{data?.profit &&data?.profit.toFixed(2)}</td>
                                 </tr>
                             </tbody>
                         </table>

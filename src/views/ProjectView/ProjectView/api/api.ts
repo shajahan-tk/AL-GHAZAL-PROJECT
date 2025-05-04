@@ -3,7 +3,7 @@ import BaseService from "@/services/BaseService"
 
 export const fetchProject = async (id:string) => {
     try {
-        console.log("idddd",id);
+        console.log("project data : ",id);
         
         const response = await BaseService.get(`/project/${id}`)
         console.log(response)
