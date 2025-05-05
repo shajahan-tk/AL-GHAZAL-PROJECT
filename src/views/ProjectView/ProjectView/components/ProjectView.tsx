@@ -532,6 +532,14 @@ const ProjectView = () => {
                         exists: false,
                         roles: ['finance', 'super_admin', 'admin'],
                     },
+                    {
+                        type: 'WorkCompletion',
+                        title: 'Work Completion',
+                        icon: '/img/document-icons/report.png',
+                        route: '/app/workprogress',
+                        exists: false,
+                        roles: ['finance', 'super_admin', 'admin'],
+                    },
                 ]
                 const fileredMockDocs = []
                 for (let i = 0; i < mockDocuments.length; i++) {

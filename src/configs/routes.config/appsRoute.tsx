@@ -143,6 +143,12 @@ const appsRoute: Routes = [
         component: lazy(() => import('@/views/workprogress/progress/progress/Progress')),
         authority: [ADMIN, USER,SUPERADMIN],
     },
+    {
+        key: 'apps.workcompletionreport',
+        path: `${APP_PREFIX_PATH}/workcompletionreport`,
+        component: lazy(() => import('@/views/workcompletion/Completionview/CompletionView')),
+        authority: [ADMIN, USER,SUPERADMIN],
+    },
     
     
 ]
