@@ -149,6 +149,12 @@ const appsRoute: Routes = [
         component: lazy(() => import('@/views/workcompletion/Completionview/CompletionView')),
         authority: [ADMIN, USER,SUPERADMIN],
     },
+    {
+        key: 'apps.invoice',
+        path: `${APP_PREFIX_PATH}/invoice`,
+        component: lazy(() => import('@/views/invoice/invoiceview/InvoiceView')),
+        authority: [ADMIN, USER,SUPERADMIN],
+    },
     
     
 ]
