@@ -133,16 +133,35 @@ const appsRoute: Routes = [
     },
     {
         key: 'apps.lpo',
-        path: `${APP_PREFIX_PATH}/lpo`,
+        path: `${APP_PREFIX_PATH}/lpo/:projectId`,
         component: lazy(() => import('@/views/lpo/lpocreate/LpoForm/LpoForm')),
         authority: [ADMIN, USER,SUPERADMIN],
     },
     {
+        key: 'apps.lpo',
+        path: `${APP_PREFIX_PATH}/lpo-view/:id`,
+        component: lazy(() => import('@/views/lpo/lpoView/lpoView')),
+        authority: [ADMIN, USER,SUPERADMIN],
+    },
+    {
         key: 'apps.workprogress',
-        path: `${APP_PREFIX_PATH}/workprogress`,
+        path: `${APP_PREFIX_PATH}/workprogress/:projectId`,
         component: lazy(() => import('@/views/workprogress/progress/progress/Progress')),
         authority: [ADMIN, USER,SUPERADMIN],
     },
+    {
+        key: 'apps.workcompletionreport',
+        path: `${APP_PREFIX_PATH}/workcompletionreport/:projectId`,
+        component: lazy(() => import('@/views/workcompletion/Completionview/CompletionView')),
+        authority: [ADMIN, USER,SUPERADMIN],
+    },
+    {
+        key: 'apps.invoice',
+        path: `${APP_PREFIX_PATH}/invoice/:projectId`,
+        component: lazy(() => import('@/views/invoice/invoiceview/InvoiceView')),
+        authority: [ADMIN, USER,SUPERADMIN],
+    },
+   
     
     
 ]
