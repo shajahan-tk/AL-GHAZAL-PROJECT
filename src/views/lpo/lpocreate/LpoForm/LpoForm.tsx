@@ -109,7 +109,7 @@ const LpoForm = forwardRef<FormikRef, LpoFormProps>((props, ref) => {
             );
           }
       
-          navigate(`/projects/${projectId}/lpos`);
+          navigate(`/app/project-view/${projectId}`);
         } catch (error) {
           console.error('Error submitting LPO:', error);
           toast.push(

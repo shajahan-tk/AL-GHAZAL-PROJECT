@@ -18,7 +18,7 @@ const appsRoute: Routes = [
     },
     {
         key: 'appsEstimationCreation.estimationCreation',
-        path: `${APP_PREFIX_PATH}/create-estimation`,
+        path: `${APP_PREFIX_PATH}/create-estimation/:projectId`,
         component: lazy(() => import('@/views/estimation/estimationcreation/EstimationCreations')),
         authority: [ADMIN, USER,SUPERADMIN,ENGINEER],
     },
@@ -157,7 +157,7 @@ const appsRoute: Routes = [
     },
     {
         key: 'apps.invoice',
-        path: `${APP_PREFIX_PATH}/invoice/:projectId`,
+        path: `${APP_PREFIX_PATH}/invoice-view/:projectId`,
         component: lazy(() => import('@/views/invoice/invoiceview/InvoiceView')),
         authority: [ADMIN, USER,SUPERADMIN],
     },

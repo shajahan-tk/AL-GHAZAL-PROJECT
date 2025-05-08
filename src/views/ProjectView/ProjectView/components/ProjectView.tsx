@@ -12,6 +12,7 @@ import {
     Dialog,
     Select
 } from '@/components/ui'
+
 import { ClipLoader } from 'react-spinners'
 import { 
     HiOutlineEye, 
@@ -34,6 +35,7 @@ import {
     fetchProject,
 } from '../api/api'
 import { useAppSelector } from '@/store'
+import { Loading } from '@/components/shared'
 
 interface Document {
     type: 'estimation' | 'quotation' | 'lpo' | 'workProgress' | 'invoice'
@@ -267,6 +269,113 @@ const StatusModal = ({
     )
 }
 
+
+const StatusModal2 = ({
+    isOpen,
+    onClose,
+    estimationId,
+    onSuccess,
+}: {
+    isOpen: boolean
+    onClose: () => void
+    estimationId: string
+    onSuccess: () => void
+}) => {
+    const [comment, setComment] = useState('')
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    const handleSubmit = async (isChecked: boolean, estimationId: string) => {
+        setIsSubmitting(true)
+        setError(null)
+
+        try {
+            await checkProject({
+                estimationId: estimationId,
+                isChecked,
+                comment: comment || undefined,
+            })
+
+            toast.push(
+                <Notification
+                    title={`Project ${
+                        isChecked ? 'checked' : 'rejected'
+                    } successfully`}
+                    type="success"
+                />,
+                { placement: 'top-center' },
+            )
+
+            onSuccess()
+            onClose()
+        } catch (error) {
+            console.error('Error updating project status:', error)
+            setError(
+                error.response?.data?.message ||
+                    'Failed to update project status',
+            )
+
+            toast.push(
+                <Notification
+                    title="Failed to update project status"
+                    type="danger"
+                />,
+                { placement: 'top-center' },
+            )
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    return (
+        <Dialog
+            isOpen={isOpen}
+            onClose={onClose}
+            width={500}
+            className="dark:bg-gray-800"
+        >
+            <h5 className="mb-4 dark:text-white">Check Status</h5>
+
+            {error && (
+                <div className="mb-4 p-2 bg-red-100 text-red-600 rounded dark:bg-red-900/30 dark:text-red-400">
+                    {error}
+                </div>
+            )}
+
+            <div className="mb-4">
+                <label className="block mb-2 dark:text-gray-300">
+                    Comments
+                </label>
+                <textarea
+                    className="w-full p-2 border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    rows={4}
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Enter your comments here..."
+                />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+                <Button
+                    variant="plain"
+                    onClick={() => handleSubmit(false, estimationId)}
+                    disabled={isSubmitting}
+                    className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
+                >
+                    {isSubmitting ? 'Processing...' : 'Reject'}
+                </Button>
+                <Button
+                    variant="solid"
+                    onClick={() => handleSubmit(true, estimationId)}
+                    disabled={isSubmitting}
+                    className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600"
+                >
+                    {isSubmitting ? 'Processing...' : 'Checked'}
+                </Button>
+            </div>
+        </Dialog>
+    )
+}
 const ProjectView = () => {
     const { id } = useParams()
     const navigate = useNavigate()
@@ -275,12 +384,16 @@ const ProjectView = () => {
     const [projectData, setProjectData] = useState<any>(null)
     const [projectLoading, setProjectLoading] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
+    const [currentProjectId, setCurrentProjectId] = useState('')
+    const [isStatusModalOpen2, setIsStatusModalOpen2] = useState(false)
+
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
     const [engineers, setEngineers] = useState<any[]>([])
     const [selectedEngineer, setSelectedEngineer] = useState<string | null>(null)
     const [engineersLoading, setEngineersLoading] = useState(false)
     const userAuthority = useAppSelector((state) => state.auth.user.authority) || []
     const role = userAuthority[0] || 'finance'
+    const [isAssigning, setIsAssigning] = useState(false) // Add this state at the top with your other states
 
     const fetchEngineersData = async () => {
         setEngineersLoading(true)
@@ -288,8 +401,9 @@ const ProjectView = () => {
             const response = await fetchEngineers()
             setEngineers(response.data.engineers)
 
+            // Set the currently assigned engineer if exists
             if (projectData?.assignedTo) {
-                setSelectedEngineer(projectData.assignedTo._id)
+                setSelectedEngineer(projectData.assignedTo._id) // Changed to use _id
             }
         } catch (error) {
             console.error('Failed to fetch engineers:', error)
@@ -301,6 +415,7 @@ const ProjectView = () => {
             setEngineersLoading(false)
         }
     }
+
 
     const openDrawer = () => {
         setIsOpen(true)
@@ -321,12 +436,27 @@ const ProjectView = () => {
         setIsStatusModalOpen(false)
     }
 
+    const openStatusModal2 = (projectId: string) => {
+        setCurrentProjectId(projectId)
+        setIsStatusModalOpen2(true)
+    }
+
+    const closeStatusModal2 = () => {
+        setIsStatusModalOpen2(false)
+    }
+
     const handleApprovalSuccess = () => {
         fetchProject(id).then((data) => {
             setProjectData(data?.data)
         })
     }
 
+    const handleCheckSuccess = () => {
+        // Refresh data or show success message
+        console.log('Project status updated successfully')
+    }
+
+   
     const handleAssignEngineer = async () => {
         if (!selectedEngineer || !id) {
             toast.push(
@@ -338,13 +468,15 @@ const ProjectView = () => {
             )
             return
         }
-
+    
+        setIsAssigning(true) // Start loading
+    
         try {
             await assignEngineer({
                 projectId: id,
                 engineerId: selectedEngineer,
             })
-
+    
             toast.push(
                 <Notification
                     title="Engineer assigned successfully"
@@ -352,22 +484,29 @@ const ProjectView = () => {
                 />,
                 { placement: 'top-center' },
             )
-
+    
+            // Refresh project data
             const updatedProject = await fetchProject(id)
             setProjectData(updatedProject?.data)
+    
+            // Close the drawer
             onDrawerClose()
         } catch (error) {
             console.error('Assignment failed:', error)
+    
             let errorMessage = 'Failed to assign engineer'
             if (error.response?.data?.message) {
                 errorMessage = error.response.data.message
             }
-
+    
             toast.push(<Notification title={errorMessage} type="danger" />, {
                 placement: 'top-center',
             })
+        } finally {
+            setIsAssigning(false) // Stop loading regardless of success/failure
         }
     }
+    
 
     const handleAddDocument = (type: string) => {
         const document = documents.find((doc) => doc.type === type)
@@ -395,7 +534,7 @@ const ProjectView = () => {
                     {
                         type: 'estimation',
                         title: 'Estimation',
-                        route: '/app/create-estimation',
+                        route: `/app/create-estimation/${id}`,
                         viewRoute: hasEstimation ? `/app/estimation-view/${data.data.estimationId}` : undefined,
                         exists: hasEstimation,
                         icon: '/img/document-icons/estimation.png',
@@ -588,7 +727,7 @@ const ProjectView = () => {
                                             <Button
                                                 block
                                                 variant="solid"
-                                                onClick={() => openStatusModal()}
+                                                onClick={() => openStatusModal2()}
                                             >
                                                 Verify Project
                                             </Button>
@@ -608,29 +747,60 @@ const ProjectView = () => {
             >
                 {engineersLoading ? (
                     <div className="flex justify-center py-8">
-                        <ClipLoader size={20} color="#3b82f6" loading={engineersLoading} />
+                        <Loading />
                     </div>
                 ) : engineers.length > 0 ? (
                     <div className="space-y-4">
-                        <Select
-                            placeholder="Select an engineer"
-                            options={engineers.map(eng => ({
-                                value: eng._id,
-                                label: `${eng.firstName} ${eng.lastName}`,
-                                avatar: eng.profileImage
-                            }))}
-                            value={selectedEngineer}
-                            onChange={setSelectedEngineer}
-                        />
-                        <div className="mt-6 flex justify-end">
-                            <Button
-                                variant="solid"
-                                onClick={handleAssignEngineer}
-                                disabled={!selectedEngineer}
+                        {engineers.map((engineer) => (
+                            <div
+                                key={engineer._id}
+                                className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                                    selectedEngineer === engineer._id
+                                        ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700'
+                                        : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border border-transparent'
+                                }`}
+                                onClick={() =>
+                                    setSelectedEngineer(engineer._id)
+                                }
                             >
-                                Confirm Assignment
-                            </Button>
-                        </div>
+                                <div className="flex items-center">
+                                    <Avatar
+                                        size={40}
+                                        src={engineer.profileImage}
+                                        className="mr-3"
+                                        shape="circle"
+                                    />
+                                    <div>
+                                        <h5 className="font-semibold text-gray-900 dark:text-white">
+                                            {engineer.firstName}{' '}
+                                            {engineer.lastName}
+                                        </h5>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            {engineer.phoneNumbers?.[0] ||
+                                                'No phone number'}
+                                        </p>
+                                    </div>
+                                </div>
+                                {selectedEngineer === engineer._id && (
+                                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                )}
+                            </div>
+                        ))}
+                      <div className="mt-6 flex justify-end">
+    {isAssigning ? (
+        <div className="flex items-center justify-center">
+            <ClipLoader size={20} color="#3b82f6" />
+        </div>
+    ) : (
+        <Button
+            variant="solid"
+            onClick={handleAssignEngineer}
+            disabled={!selectedEngineer}
+        >
+            {selectedEngineer ? 'Confirm Assignment' : 'Select an engineer'}
+        </Button>
+    )}
+</div>
                     </div>
                 ) : (
                     <div className="text-center py-4 text-gray-500 dark:text-gray-400">
@@ -639,11 +809,18 @@ const ProjectView = () => {
                 )}
             </Drawer>
 
+
             <StatusModal
                 isOpen={isStatusModalOpen}
                 onClose={closeStatusModal}
                 estimationId={projectData?.estimationId}
                 onSuccess={handleApprovalSuccess}
+            />
+            <StatusModal2
+                isOpen={isStatusModalOpen2}
+                onClose={closeStatusModal2}
+                estimationId={projectData?.estimationId}
+                onSuccess={handleCheckSuccess}
             />
         </div>
     )

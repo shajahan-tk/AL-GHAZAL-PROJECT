@@ -6,7 +6,7 @@ import { Form, Formik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import toast from '@/components/ui/toast';
 import Notification from '@/components/ui/Notification';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import AdaptableCard from '@/components/shared/AdaptableCard';
 import Input from '@/components/ui/Input';
 import { FormItem } from '@/components/ui/Form';
@@ -118,11 +118,8 @@ const validationSchema = Yup.object().shape({
 const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) => {
   const { onDiscard } = props;
   const navigate = useNavigate();
-  const { state } = useLocation();
-  
-  // Get projectId or estimationId from location state
-  const projectId = state;
-  console.log("hi state",state);
+  const {projectId} = useParams();
+  const {state}=useLocation()
   
   const estimationId = state?.estimationId;
 

@@ -18,12 +18,36 @@ import { createQuotation, getQuotationByProject, updateQuotation } from '../api/
 import { APP_PREFIX_PATH } from '@/constants/route.constant';
 import { Upload } from '@/components/ui';
 
-// Constants for dropdown options
 const measurementUnits = [
+  // Mass
   { value: 'kg', label: 'Kilogram (kg)' },
   { value: 'g', label: 'Gram (g)' },
+  { value: 'mg', label: 'Milligram (mg)' },
   { value: 'lb', label: 'Pound (lb)' },
-  // ... other units
+  { value: 'oz', label: 'Ounce (oz)' },
+  { value: 'ton', label: 'Ton (ton)' },
+
+  // Volume
+  { value: 'l', label: 'Liter (L)' },
+  { value: 'ml', label: 'Milliliter (mL)' },
+  { value: 'gal', label: 'Gallon (gal)' },
+  { value: 'pt', label: 'Pint (pt)' },
+  { value: 'qt', label: 'Quart (qt)' },
+  { value: 'fl_oz', label: 'Fluid Ounce (fl oz)' },
+
+  // Length
+  { value: 'm', label: 'Meter (m)' },
+  { value: 'cm', label: 'Centimeter (cm)' },
+  { value: 'mm', label: 'Millimeter (mm)' },
+  { value: 'in', label: 'Inch (in)' },
+  { value: 'ft', label: 'Foot (ft)' },
+  { value: 'yd', label: 'Yard (yd)' },
+
+  // Count/Other
+  { value: 'pcs', label: 'Pieces (pcs)' },
+  { value: 'box', label: 'Box (box)' },
+  { value: 'dozen', label: 'Dozen (dozen)' },
+  { value: 'pack', label: 'Pack (pack)' }
 ];
 
 const termsCategories = [
