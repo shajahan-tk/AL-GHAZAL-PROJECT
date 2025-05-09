@@ -109,8 +109,8 @@ const ProjectForm = () => {
         siteLocation:formData.siteLocation
       })
       if(response.status===200){
-       
         console.log('Project Updated:', response.data)
+        
         toast.push(
           <Notification
               title={'Successfuly Updated project'}
@@ -136,7 +136,6 @@ const ProjectForm = () => {
         })
   
         if(response.status===201){
-          //on second callila,ini cheythok, on run cheyy setttttttt mahn
           console.log('Project creatd:', response.data)
           toast.push(
             <Notification
@@ -150,7 +149,7 @@ const ProjectForm = () => {
                 placement: 'top-center',
             },
         )
-          navigate(-1)
+          navigate('/app/project-list')
         }
        
       } catch (error) {

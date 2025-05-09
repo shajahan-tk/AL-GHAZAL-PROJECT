@@ -1,4 +1,5 @@
 import { forwardRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FormContainer, FormItem } from '@/components/ui/Form'
 import Button from '@/components/ui/Button'
 import StickyFooter from '@/components/shared/StickyFooter'
@@ -28,6 +29,7 @@ type Location = {
 type FormikRef = FormikProps<any>
 
 type InitialData = {
+  id?: string
   clientName?: string
   email?: string
   clientAddress?: string
@@ -39,7 +41,10 @@ type InitialData = {
   locations?: Location[]
 }
 
-export type FormModel = InitialData
+export type FormModel = Omit<InitialData, 'locations'> & {
+  locations: Location[]
+}
+
 export type SetSubmitting = (isSubmitting: boolean) => void
 
 type ClientFormProps = {
@@ -47,7 +52,7 @@ type ClientFormProps = {
   type: 'edit' | 'new'
   onDiscard?: () => void
   onDelete?: () => void
-  onFormSubmit: (formData: FormModel, setSubmitting: SetSubmitting) => void
+  onFormSubmit: (formData: FormModel, setSubmitting: SetSubmitting) => Promise<{ id: string }>
 }
 
 // Validation Schema
@@ -73,6 +78,7 @@ const validationSchema = Yup.object().shape({
 })
 
 const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
+  const navigate = useNavigate()
   const {
     type,
     initialData = {
@@ -169,12 +175,37 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
         locations,
       }}
       validationSchema={validationSchema}
-      onSubmit={(values: FormModel, { setSubmitting }) => {
-        const formData = {
-          ...cloneDeep(values),
-          locations,
+      onSubmit={async (values: Omit<InitialData, 'locations'>, { setSubmitting }) => {
+        try {
+          // Structure the data exactly as required
+          const formData: FormModel = {
+            ...values,
+            locations: locations.map(location => ({
+              name: location.name,
+              buildings: location.buildings.map(building => ({
+                name: building.name,
+                apartments: building.apartments.map(apartment => ({
+                  number: apartment.number
+                }))
+              }))
+            }))
+          }
+
+          console.log('Form data to be submitted:', JSON.stringify(formData, null, 2))
+
+          // Call the onFormSubmit prop with the structured data
+          const response = await onFormSubmit(formData, setSubmitting)
+          
+          // After successful submission, navigate to the client view page
+          if (response?.id) {
+            navigate(`/client-view/${response.id}`)
+          } else if (type === 'edit' && initialData.id) {
+            navigate(`/client-view/${initialData.id}`)
+          }
+        } catch (error) {
+          console.error('Form submission error:', error)
+          // Error handling is done in the parent component through onFormSubmit
         }
-        onFormSubmit(formData, setSubmitting)
       }}
       validateOnBlur={true}
       validateOnChange={false}
@@ -324,6 +355,7 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
                   variant="solid"
                   icon={<AiOutlinePlus />}
                   onClick={addLocation}
+                  type="button"
                 >
                   Add Location
                 </Button>
@@ -354,7 +386,7 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
                         }
                         placeholder="Location Name"
                         component={Input}
-                        className="flex-grow mr-2 border-none bg-transparent px-0"
+                        className="flex-grow mr-2 bg-transparent px-0"
                       />
                       <Button
                         size="xs"
@@ -363,6 +395,7 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
                         icon={<AiOutlineMinus />}
                         onClick={() => removeLocation(locationIndex)}
                         className="hover:bg-gray-200 dark:hover:bg-gray-600"
+                        type="button"
                       />
                     </div>
 
@@ -390,7 +423,7 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
                                 }
                                 placeholder="Building Name"
                                 component={Input}
-                                className="flex-grow mr-2 border-none bg-transparent px-0"
+                                className="flex-grow mr-2 bg-transparent px-0"
                               />
                               <Button
                                 size="xs"
@@ -399,6 +432,7 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
                                 icon={<AiOutlineMinus />}
                                 onClick={() => removeBuilding(locationIndex, buildingIndex)}
                                 className="hover:bg-gray-200 dark:hover:bg-gray-600"
+                                type="button"
                               />
                             </div>
 
@@ -441,6 +475,7 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
                                         removeApartment(locationIndex, buildingIndex, apartmentIndex)
                                       }
                                       className="hover:bg-gray-200 dark:hover:bg-gray-600"
+                                      type="button"
                                     />
                                   </div>
                                 ))}
@@ -451,6 +486,7 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
                                 icon={<AiOutlinePlus />}
                                 onClick={() => addApartment(locationIndex, buildingIndex)}
                                 className="mt-2 w-full justify-center"
+                                type="button"
                               >
                                 Add Apartment
                               </Button>
@@ -464,6 +500,7 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
                         icon={<AiOutlinePlus />}
                         onClick={() => addBuilding(locationIndex)}
                         className="mt-3 w-full justify-center"
+                        type="button"
                       >
                         Add Building
                       </Button>
@@ -503,6 +540,7 @@ const ClientForm = forwardRef<FormikRef, ClientFormProps>((props, ref) => {
                   size="sm"
                   variant="solid"
                   loading={isSubmitting}
+                  disabled={isSubmitting}
                   icon={<AiOutlineSave />}
                   type="submit"
                 >

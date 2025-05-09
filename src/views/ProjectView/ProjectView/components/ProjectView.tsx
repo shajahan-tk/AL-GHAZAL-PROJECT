@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
     Card,
@@ -270,7 +270,7 @@ const StatusModal = ({
 }
 
 
-const StatusModal2 = ({
+const StatusModal2 = React.memo(({
     isOpen,
     onClose,
     estimationId,
@@ -285,13 +285,13 @@ const StatusModal2 = ({
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    const handleSubmit = async (isChecked: boolean, estimationId: string) => {
+    const handleSubmit = async (isChecked: boolean) => {
         setIsSubmitting(true)
         setError(null)
 
         try {
             await checkProject({
-                estimationId: estimationId,
+                estimationId,
                 isChecked,
                 comment: comment || undefined,
             })
@@ -308,6 +308,7 @@ const StatusModal2 = ({
 
             onSuccess()
             onClose()
+            setComment('') // Reset comment after submission
         } catch (error) {
             console.error('Error updating project status:', error)
             setError(
@@ -326,6 +327,14 @@ const StatusModal2 = ({
             setIsSubmitting(false)
         }
     }
+
+    // Reset state when modal closes
+    useEffect(() => {
+        if (!isOpen) {
+            setComment('')
+            setError(null)
+        }
+    }, [isOpen])
 
     return (
         <Dialog
@@ -358,7 +367,7 @@ const StatusModal2 = ({
             <div className="flex justify-end space-x-2">
                 <Button
                     variant="plain"
-                    onClick={() => handleSubmit(false, estimationId)}
+                    onClick={() => handleSubmit(false)}
                     disabled={isSubmitting}
                     className="text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
                 >
@@ -366,7 +375,7 @@ const StatusModal2 = ({
                 </Button>
                 <Button
                     variant="solid"
-                    onClick={() => handleSubmit(true, estimationId)}
+                    onClick={() => handleSubmit(true)}
                     disabled={isSubmitting}
                     className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600"
                 >
@@ -375,7 +384,8 @@ const StatusModal2 = ({
             </div>
         </Dialog>
     )
-}
+})
+
 const ProjectView = () => {
     const { id } = useParams()
     const navigate = useNavigate()
@@ -816,12 +826,12 @@ const ProjectView = () => {
                 estimationId={projectData?.estimationId}
                 onSuccess={handleApprovalSuccess}
             />
-            <StatusModal2
-                isOpen={isStatusModalOpen2}
-                onClose={closeStatusModal2}
-                estimationId={projectData?.estimationId}
-                onSuccess={handleCheckSuccess}
-            />
+         <StatusModal2
+    isOpen={isStatusModalOpen2}
+    onClose={closeStatusModal2}
+    estimationId={projectData?.estimationId || ''}
+    onSuccess={handleCheckSuccess}
+/>
         </div>
     )
 }
