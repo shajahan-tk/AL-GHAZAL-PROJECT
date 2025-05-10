@@ -3,6 +3,7 @@ import BaseService from "@/services/BaseService"
 
 interface IMaterialItem {
     subjectMaterial: string;
+    uom: string;
     quantity: number;
     unitPrice: number;
     total: number;
@@ -40,6 +41,8 @@ type EstimationApi={
 
   export const createEstimation = async (data:EstimationApi) => {
       try {
+        console.log(data);
+        
           const response = await BaseService.post("/estimation",data)
           return response
       } catch (error) {

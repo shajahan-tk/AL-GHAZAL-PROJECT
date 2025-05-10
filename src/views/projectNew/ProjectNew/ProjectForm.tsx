@@ -1,193 +1,185 @@
-import { useEffect, useState } from 'react'
-import Container from '@/components/shared/Container'
-import AdaptableCard from '@/components/shared/AdaptableCard'
-import { useNavigate, useParams } from 'react-router-dom'
-import axios, { AxiosResponse } from 'axios'
-import { FormStep } from './components/FormStep'
-import { PersonalInformation } from './components/PersonalInformation'
-import ProjectReview from './components/ProjectReview'
-import ProjectInformation from './components/ProjectInformation'
-import AddressInformation from './components/AddressInformation'
-import { createProject, editProject, fetchProjectById } from '../api/api'
-import { Notification, toast } from '@/components/ui'
+import { useEffect, useState } from 'react';
+import Container from '@/components/shared/Container';
+import AdaptableCard from '@/components/shared/AdaptableCard';
+import { useNavigate, useParams } from 'react-router-dom';
+import axios, { AxiosResponse } from 'axios';
+import { FormStep } from './components/FormStep';
+import { PersonalInformation } from './components/PersonalInformation';
+import ProjectReview from './components/ProjectReview';
+import ProjectInformation from './components/ProjectInformation';
+import AddressInformation from './components/AddressInformation';
+import { createProject, editProject, fetchProjectById } from '../api/api';
+import { Notification, toast } from '@/components/ui';
 
-type  ClientData ={
-  _id:string;
-  clientName:string;
-  clientAddress: string
-  pincode: string
-  mobileNumber: string
-  telephoneNumber: string | null
-  trnNumber: string
-}
+type ClientData = {
+  _id: string;
+  clientName: string;
+  clientAddress: string;
+  pincode: string;
+  mobileNumber: string;
+  telephoneNumber: string | null;
+  trnNumber: string;
+  locations: {
+    name: string;
+    buildings: {
+      name: string;
+      apartments: {
+        number: string;
+      }[];
+    }[];
+  }[];
+};
 
 type FormData = {
-  clientName: string
-  projectName: string
-  projectDescription: string
-  siteAddress: string
-  siteLocation: string
-  clientData:ClientData
-
-}
-
+  clientName: string;
+  projectName: string;
+  projectDescription: string;
+  location: string;
+  building: string;
+  apartment: string;
+  clientData: ClientData;
+};
 
 const ProjectForm = () => {
-  const navigate = useNavigate()
-  const {id}=useParams()
-  const [currentStep, setCurrentStep] = useState(0)
-  const [completedSteps, setCompletedSteps] = useState(0)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
     clientName: '',
     projectName: '',
-    projectDescription:'',
-    siteAddress: '',
-    siteLocation:'',
-    clientData:{
-      _id:"",
-      clientName:"",
-      clientAddress:"", 
-      pincode:"", 
-      mobileNumber:"", 
-      telephoneNumber:"",  
-      trnNumber:"", 
+    projectDescription: '',
+    location: '',
+    building: '',
+    apartment: '',
+    clientData: {
+      _id: '',
+      clientName: '',
+      clientAddress: '',
+      pincode: '',
+      mobileNumber: '',
+      telephoneNumber: '',
+      trnNumber: '',
+      locations: []
     }
-   
-  })
+  });
 
   const steps = [
     { label: 'Client Details', value: 0 },
     { label: 'Project Details', value: 1 },
     { label: 'Address Information', value: 2 },
     { label: 'Review', value: 3 }
-  ]
+  ];
 
   const handleNext = (
     data: Partial<FormData>,
     formName?: string,
     setSubmitting?: (isSubmitting: boolean) => void
   ) => {
-    setFormData(prev => ({ ...prev, ...data }))
+    setFormData(prev => ({ ...prev, ...data }));
     
-    if (currentStep < steps.length - 2) { // Changed to steps.length - 2 to account for review step
-      setCurrentStep(currentStep + 1)
+    if (currentStep < steps.length - 2) {
+      setCurrentStep(currentStep + 1);
     } else if (currentStep === steps.length - 2) {
-      // If we're on the last form step (Address Information), go to review
-      setCurrentStep(currentStep + 1)
+      setCurrentStep(currentStep + 1);
     }
-    setCompletedSteps(prev=>prev>(currentStep+1)?prev:currentStep+1);
+    setCompletedSteps(prev => prev > (currentStep + 1) ? prev : currentStep + 1);
     
-    setSubmitting?.(false)
-  }
+    setSubmitting?.(false);
+  };
 
   const handleBack = () => {
-    setCurrentStep(prev => Math.max(0, prev - 1))
-  }
-
-  // const handleSubmit = async () => {
-  //   try {
-  //     const response = await createProject()
-  //     console.log('Project created:', response.data)
-  //     navigate('/projects')
-  //   } catch (error) {
-  //     console.error('Error submitting form:', error)
-  //   }
-  // }
-
+    setCurrentStep(prev => Math.max(0, prev - 1));
+  };
 
   const handleSubmit = async () => {
-    setIsSubmitting(true)
-    setError(null)
-    if(id){
-      const response:AxiosResponse = await editProject(id,{
-        client:formData.clientData._id,
-        projectDescription:formData.projectDescription,
-        projectName:formData.projectName,
-        siteAddress:formData.siteAddress,
-        siteLocation:formData.siteLocation
-      })
-      if(response.status===200){
-        console.log('Project Updated:', response.data)
-        
-        toast.push(
-          <Notification
-              title={'Successfuly Updated project'}
-              type="success"
-              duration={2500}
-          >
-              Project successfuly Updated
-          </Notification>,
-          {
-              placement: 'top-center',
-          },
-      )
-        navigate('/app/project-list')
-      }
-    }else{
-      try {
-        const response:AxiosResponse = await createProject({
-          client:formData.clientData._id,
-          projectDescription:formData.projectDescription,
-          projectName:formData.projectName,
-          siteAddress:formData.siteAddress,
-          siteLocation:formData.siteLocation
-        })
-  
-        if(response.status===201){
-          console.log('Project creatd:', response.data)
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      const projectData = {
+        client: formData.clientData._id,
+        projectDescription: formData.projectDescription,
+        projectName: formData.projectName,
+        location: formData.location,
+        building: formData.building,
+        apartmentNumber: formData.apartment
+      };
+
+      if (id) {
+        const response: AxiosResponse = await editProject(id, projectData);
+        if (response.status === 200) {
           toast.push(
             <Notification
-                title={'Successfuly created project'}
-                type="success"
-                duration={2500}
+              title={'Successfully Updated project'}
+              type="success"
+              duration={2500}
             >
-                Project successfuly created
+              Project successfully Updated
             </Notification>,
             {
-                placement: 'top-center',
+              placement: 'top-center',
             },
-        )
-          navigate('/app/project-list')
+          );
+          navigate('/app/project-list');
         }
-       
-      } catch (error) {
-        console.error('Error submitting form:', error)
-        setError('Failed to create project. Please try again.')
-      } finally {
-        setIsSubmitting(false)
+      } else {
+        const response: AxiosResponse = await createProject(projectData);
+        if (response.status === 201) {
+          toast.push(
+            <Notification
+              title={'Successfully created project'}
+              type="success"
+              duration={2500}
+            >
+              Project successfully created
+            </Notification>,
+            {
+              placement: 'top-center',
+            },
+          );
+          navigate('/app/project-list');
+        }
       }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setError('Failed to create project. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-   
-  }
-  const fetchProject=async()=>{
-    const {data}=await fetchProjectById(id);
+  };
+
+  const fetchProject = async () => {
+    const { data } = await fetchProjectById(id);
     setFormData({
-      clientData:{
-        _id:data?.client?._id,
-        clientName:data?.client?.clientName,
-        clientAddress:data?.client?.clientAddress,
-        mobileNumber:data?.client?.mobileNumber,
-        telephoneNumber:data?.client?.telephoneNumber,
-        trnNumber:data?.client?.trnNumber,
-        pincode:data?.client?.pincode,
+      clientData: {
+        _id: data?.client?._id,
+        clientName: data?.client?.clientName,
+        clientAddress: data?.client?.clientAddress,
+        mobileNumber: data?.client?.mobileNumber,
+        telephoneNumber: data?.client?.telephoneNumber,
+        trnNumber: data?.client?.trnNumber,
+        pincode: data?.client?.pincode,
+        locations: data?.client?.locations || []
       },
-      projectName:data?.projectName,
-      projectDescription:data?.projectDescription,
-      siteAddress:data?.siteAddress,
-      siteLocation:data?.siteLocation,
-      clientName:data?.client?.clientName
-    })
+      projectName: data?.projectName,
+      projectDescription: data?.projectDescription,
+      location: data?.location || '',
+      building: data?.building || '',
+      apartment: data?.apartmentNumber || '',
+      clientName: data?.client?.clientName
+    });
     setCompletedSteps(3);
     setCurrentStep(3);
-}  
-  useEffect(()=>{
-    if (id) {
-      fetchProject()
-    }
-  },[])
+  };
 
+  useEffect(() => {
+    if (id) {
+      fetchProject();
+    }
+  }, [id]);
 
   return (
     <Container className="h-full">
@@ -219,9 +211,9 @@ const ProjectForm = () => {
               <AddressInformation
                 data={formData}
                 onNextChange={(values, formName, setSubmitting) => {
-                  setFormData(prev => ({ ...prev, ...values }))
-                  setCurrentStep(3)
-                  setSubmitting(false)
+                  setFormData(prev => ({ ...prev, ...values }));
+                  setCurrentStep(3);
+                  setSubmitting(false);
                 }}
                 onBackChange={handleBack}
               />
@@ -237,7 +229,7 @@ const ProjectForm = () => {
         </div>
       </AdaptableCard>
     </Container>
-  )
-}
+  );
+};
 
-export default ProjectForm
+export default ProjectForm;

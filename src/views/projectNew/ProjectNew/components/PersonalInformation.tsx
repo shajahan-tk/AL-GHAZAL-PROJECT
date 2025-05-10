@@ -30,7 +30,6 @@ type PersonalInformationProps = {
 }
 
 
-
 const PersonalInformation = ({ data, onNext }: PersonalInformationProps) => {
   console.log("daaataaaaa",data);
   

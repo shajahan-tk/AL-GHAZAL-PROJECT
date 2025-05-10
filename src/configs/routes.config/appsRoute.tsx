@@ -34,6 +34,12 @@ const appsRoute: Routes = [
         component: lazy(() => import('@/views/estimation/estimationViews/EstimationView')),
         authority: [ADMIN, USER,SUPERADMIN,ENGINEER],
     },    
+      {
+        key: 'appsEstimationEdit.estimationEdit',
+        path: `${APP_PREFIX_PATH}/estimation/edit/:projectId/:estimationId`,
+        component: lazy(() => import('@/views/estimation/estimationcreation/EstimationCreations')),
+        authority: [ADMIN, USER,SUPERADMIN,ENGINEER],
+    },    
     {
         key: 'appsUsers.userNew',
         path: `${APP_PREFIX_PATH}/user-new`,

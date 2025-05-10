@@ -80,12 +80,7 @@ const ImageUploadModal = ({ isOpen, onClose, onUpload, projectId }: ImageUploadM
     >
       <div className="flex justify-between items-center mb-4">
         <h4>Upload Work Completion Images</h4>
-        <Button
-          shape="circle"
-          variant="plain"
-          icon={<HiOutlineX />}
-          onClick={onClose}
-        />
+       
       </div>
       
       <div className="mb-6">

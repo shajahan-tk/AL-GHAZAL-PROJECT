@@ -1,33 +1,52 @@
-import { Card } from '@/components/ui'
-import Button from '@/components/ui/Button'
-import DoubleSidedImage from '@/components/shared/DoubleSidedImage'
-type  ClientData ={
-  _id:string;
-  clientName:string;
-  clientAddress: string
-  pincode: string
-  mobileNumber: string
-  telephoneNumber: string | null
-  trnNumber: string
-}
+import { Card } from '@/components/ui';
+import Button from '@/components/ui/Button';
+
+type ClientData = {
+  clientName: string;
+  clientAddress: string;
+  pincode: string;
+  mobileNumber: string;
+  telephoneNumber: string | null;
+  trnNumber: string;
+  locations: {
+    name: string;
+    buildings: {
+      name: string;
+      apartments: {
+        number: string;
+      }[];
+    }[];
+  }[];
+};
 
 type FormData = {
-  clientName: string
-  projectName: string
-  projectDescription: string
-  siteAddress: string
-  siteLocation: string
-  clientData:ClientData
-
-}
+  clientName: string;
+  projectName: string;
+  projectDescription: string;
+  location: string;
+  building: string;
+  apartmentNumber: string;
+  clientData: ClientData;
+};
 
 type ProjectReviewProps = {
-  data: FormData
-  onBack: () => void
-  onSubmit: () => void
-}
+  data: FormData;
+  onBack: () => void;
+  onSubmit: () => void;
+};
 
 const ProjectReview = ({ data, onBack, onSubmit }: ProjectReviewProps) => {
+  // Find the selected location, building, and apartment by name/number
+  const selectedLocation = data.clientData.locations.find(
+    loc => loc.name === data.location
+  );
+  const selectedBuilding = selectedLocation?.buildings.find(
+    bld => bld.name === data.building
+  );
+  const selectedApartment = selectedBuilding?.apartments.find(
+    apt => apt.number === data?.apartment
+  );
+
   return (
     <div className="max-w-4xl mx-auto">
       <h3 className="mb-6 text-center">Project Review</h3>
@@ -43,24 +62,23 @@ const ProjectReview = ({ data, onBack, onSubmit }: ProjectReviewProps) => {
               </div>
               <div>
                 <p className="text-gray-500">Client Address</p>
-                <p className="font-semibold">{data?.clientData?.clientAddress || 'Not provided'}</p>
+                <p className="font-semibold">{data.clientData.clientAddress || 'Not provided'}</p>
               </div>
-             
               <div>
                 <p className="text-gray-500">Pincode</p>
-                <p className="font-semibold">{data?.clientData?.pincode || 'Not provided'}</p>
+                <p className="font-semibold">{data.clientData.pincode || 'Not provided'}</p>
               </div>
               <div>
                 <p className="text-gray-500">Mobile Number</p>
-                <p className="font-semibold">{data?.clientData?.mobileNumber || 'Not provided'}</p>
+                <p className="font-semibold">{data.clientData.mobileNumber || 'Not provided'}</p>
               </div>
               <div>
                 <p className="text-gray-500">Telephone Number</p>
-                <p className="font-semibold">{data?.clientData?.telephoneNumber || 'Not provided'}</p>
+                <p className="font-semibold">{data.clientData.telephoneNumber || 'Not provided'}</p>
               </div>
               <div>
                 <p className="text-gray-500">Trn Number</p>
-                <p className="font-semibold">{data?.clientData?.trnNumber || 'Not provided'}</p>
+                <p className="font-semibold">{data.clientData.trnNumber || 'Not provided'}</p>
               </div>
             </div>
           </div>
@@ -83,12 +101,16 @@ const ProjectReview = ({ data, onBack, onSubmit }: ProjectReviewProps) => {
             <h5 className="mb-4">Address Information</h5>
             <div className="space-y-4">
               <div>
-                <p className="text-gray-500">Site Address</p>
-                <p className="font-semibold">{data.siteAddress || 'Not provided'}</p>
+                <p className="text-gray-500">Location</p>
+                <p className="font-semibold">{data.location || 'Not provided'}</p>
               </div>
               <div>
-                <p className="text-gray-500">Site Location</p>
-                <p className="font-semibold">{data.siteLocation || 'Not provided'}</p>
+                <p className="text-gray-500">Building</p>
+                <p className="font-semibold">{data.building || 'Not provided'}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Apartment</p>
+                <p className="font-semibold">{data.apartment || 'Not provided'}</p>
               </div>
             </div>
           </div>
@@ -104,7 +126,7 @@ const ProjectReview = ({ data, onBack, onSubmit }: ProjectReviewProps) => {
         </Button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProjectReview
+export default ProjectReview;

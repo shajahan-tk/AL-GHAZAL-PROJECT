@@ -1,9 +1,9 @@
 import Card from '@/components/ui/Card'
 import Avatar from '@/components/ui/Avatar'
 import IconText from '@/components/shared/IconText'
-import { HiMail, HiPhone, HiExternalLink } from 'react-icons/hi'
+import { HiMail, HiPhone, HiExternalLink, HiPhoneIncoming } from 'react-icons/hi'
 import { Link } from 'react-router-dom'
-
+import { FaMobile } from "react-icons/fa";
 
 
 const CustomerInfo = ({ clientinformation: data }) => {
@@ -32,10 +32,14 @@ const CustomerInfo = ({ clientinformation: data }) => {
                 className="mb-4"
                 icon={<HiMail className="text-xl opacity-70" />}
             >
-                <span className="font-semibold">{data?.email}</span>
+                <span className="font-semibold">{data?.client?.email}</span>
             </IconText>
-            <IconText icon={<HiPhone className="text-xl opacity-70" />}>
+            <IconText icon={<FaMobile className="text-xl opacity-70" />}>
                 <span className="font-semibold">{data?.client?.mobileNumber}</span>
+            </IconText>
+            <br />
+             <IconText icon={<HiPhone className="text-xl opacity-70" />}>
+                <span className="font-semibold">{data?.client?.telephoneNumber}</span>
             </IconText>
             <hr className="my-5" />
             <h6 className="mb-4">Shipping Address</h6>

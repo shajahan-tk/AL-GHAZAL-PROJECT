@@ -23,6 +23,7 @@ interface Estimation {
   estimationNumber: string;
   materials: {
     _id: string;
+    uom:string;
     subjectMaterial: string;
     quantity: number;
     unitPrice: number;
@@ -501,7 +502,7 @@ const EstimationView = () => {
                   <Button
                     variant="solid"
                     className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600 px-4 py-2 rounded-md"
-                    onClick={() => navigate(`/estimations/edit/${id}`)}
+                    onClick={() => navigate(`/estimation/edit/${id}/`)}
                   >
                     <FaEdit className="" /> 
                   </Button>

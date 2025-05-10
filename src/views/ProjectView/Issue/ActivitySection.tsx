@@ -100,7 +100,7 @@ const CommentItem = ({ comment }: { comment: Comment }) => {
   )
 }
 
-const ActivitySection = ({ projectId }: { projectId: string }) => {
+const ActivitySection = ({ projectId, refresh = false }: { projectId: string, refresh?: boolean }) => {
     const [loading, setLoading] = useState(true)
     const [comments, setComments] = useState<Comment[]>([])
     const [commenting, setCommenting] = useState(false)
@@ -110,7 +110,7 @@ const ActivitySection = ({ projectId }: { projectId: string }) => {
         if (projectId) {
             fetchData()
         }
-    }, [projectId])
+    }, [projectId, refresh])
 
     const fetchData = async () => {
         setLoading(true)

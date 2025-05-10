@@ -13,6 +13,7 @@ import { FormItem } from '@/components/ui/Form';
 import { Field, FieldArray } from 'formik';
 import { HiOutlineTrash, HiOutlinePlus } from 'react-icons/hi';
 import DatePicker from '@/components/ui/DatePicker';
+import Select from '@/components/ui/Select';
 import { createEstimation, fetchEstimation, editEstimation } from '../api/api';
 import { APP_PREFIX_PATH } from '@/constants/route.constant';
 import { log } from 'util';
@@ -21,6 +22,7 @@ type FormikRef = FormikProps<any>;
 
 interface IMaterialItem {
   description: string;
+  uom: string;
   quantity: number;
   unitPrice: number;
   total: number;
@@ -83,6 +85,7 @@ const validationSchema = Yup.object().shape({
   materials: Yup.array().of(
     Yup.object().shape({
       description: Yup.string().required('Material name is required'),
+      uom: Yup.string().required('Unit of measurement is required'),
       quantity: Yup.number()
         .required('Quantity is required')
         .min(0, 'Quantity must be positive'),
@@ -115,13 +118,47 @@ const validationSchema = Yup.object().shape({
   ),
 });
 
+const measurementUnits = [
+  // Mass
+  { value: 'kg', label: 'Kilogram (kg)' },
+  { value: 'g', label: 'Gram (g)' },
+  { value: 'mg', label: 'Milligram (mg)' },
+  { value: 'lb', label: 'Pound (lb)' },
+  { value: 'oz', label: 'Ounce (oz)' },
+  { value: 'ton', label: 'Ton (ton)' },
+
+  // Volume
+  { value: 'l', label: 'Liter (L)' },
+  { value: 'ml', label: 'Milliliter (mL)' },
+  { value: 'gal', label: 'Gallon (gal)' },
+  { value: 'pt', label: 'Pint (pt)' },
+  { value: 'qt', label: 'Quart (qt)' },
+  { value: 'fl_oz', label: 'Fluid Ounce (fl oz)' },
+
+  // Length
+  { value: 'm', label: 'Meter (m)' },
+  { value: 'cm', label: 'Centimeter (cm)' },
+  { value: 'mm', label: 'Millimeter (mm)' },
+  { value: 'in', label: 'Inch (in)' },
+  { value: 'ft', label: 'Foot (ft)' },
+  { value: 'yd', label: 'Yard (yd)' },
+
+  // Count/Other
+  { value: 'pcs', label: 'Pieces (pcs)' },
+  { value: 'box', label: 'Box (box)' },
+  { value: 'dozen', label: 'Dozen (dozen)' },
+  { value: 'pack', label: 'Pack (pack)' }
+];
+
 const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) => {
   const { onDiscard } = props;
   const navigate = useNavigate();
-  const {projectId} = useParams();
+  const paramsData= useParams();
   const {state}=useLocation()
+  console.log("paramsData",paramsData);
   
-  const estimationId = state?.estimationId;
+  const {projectId,estimationId}=paramsData
+  // const estimationId = state?.estimationId;
 
   const [initialValues, setInitialValues] = useState<FormModel>({
     dateOfEstimation: new Date(),
@@ -131,7 +168,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
     paymentDueBy: '',
     status: 'Draft',
     materials: [
-      { description: '', quantity: 0, unitPrice: 0, total: 0 },
+      { description: '',uom: '', quantity: 0, unitPrice: 0, total: 0 },
     ],
     labourCharges: [
       { designation: '', days: 0, price: 0, total: 0 },
@@ -161,6 +198,7 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
             status: estimation.status || 'Draft',
             materials: estimation.materials.map(m => ({
               description: m.description,
+              uom: m.uom,
               quantity: m.quantity,
               unitPrice: m.unitPrice,
               total: m.total,
@@ -475,6 +513,24 @@ const EstimationForm = forwardRef<FormikRef, EstimationFormProps>((props, ref) =
                               component={Input}
                             />
                           </FormItem>
+                          <FormItem
+                                                      label="UOM"
+                                                      invalid={!!errors.materials?.[index]?.uom && touched.materials?.[index]?.uom}
+                                                      errorMessage={errors.materials?.[index]?.uom}
+                                                    >
+                                                      <Field name={`materials[${index}].uom`}>
+                                                        {({ field, form }: any) => (
+                                                          <Select
+                                                            options={measurementUnits}
+                                                            value={measurementUnits.find(option => option.value === field.value) || null}
+                                                            onChange={(option: any) => {
+                                                              form.setFieldValue(field.name, option?.value || '');
+                                                            }}
+                                                            placeholder="Select unit"
+                                                          />
+                                                        )}
+                                                      </Field>
+                                                    </FormItem>
 
                           <FormItem
                             label="Quantity"

@@ -31,14 +31,20 @@ const ProjectInfo = ({ projectdetails: data }) => {
                 <IconText icon={<HiLocationMarker className="text-xl opacity-70" />}>
                     <div>
                         <div className="font-semibold">Site Location</div>
-                        <div className="text-gray-700">{data?.siteLocation || 'Not specified'}</div>
+                        <div className="text-gray-700">{data?.location || 'Not specified'}</div>
                     </div>
                 </IconText>
                 
                 <IconText icon={<HiOutlineGlobe className="text-xl opacity-70" />}>
                     <div>
-                        <div className="font-semibold">Site Address</div>
-                        <div className="text-gray-700">{data?.siteAddress || 'Not specified'}</div>
+                        <div className="font-semibold">Building</div>
+                        <div className="text-gray-700">{data?.building || 'Not specified'}</div>
+                    </div>
+                </IconText>
+                 <IconText icon={<HiOutlineGlobe className="text-xl opacity-70" />}>
+                    <div>
+                        <div className="font-semibold">Apartment</div>
+                        <div className="text-gray-700">{data?.apartmentNumber || 'Not specified'}</div>
                     </div>
                 </IconText>
             </div>

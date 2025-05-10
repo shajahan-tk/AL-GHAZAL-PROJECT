@@ -26,6 +26,7 @@ type Estimation = {
     paymentDueBy: number
     materials: {
         description: string
+        uom:string
         quantity: number
         unitPrice: number
         total: number
@@ -76,8 +77,12 @@ const EstimationContent = () => {
 
 
     const handleEdit = () => {
+        console.log("shaaaa",data);
+        console.log("ajaaaaaa",id)
+        
         if (data) {
-            navigate(`${APP_PREFIX_PATH}/create-estimation`, { state: { estimationId: id } })
+            navigate(`${APP_PREFIX_PATH}/estimation/edit/${data.project._id}/${id}`, { state: { estimationId: id } })
+
         }
     }
 
@@ -204,6 +209,8 @@ const EstimationContent = () => {
                             <thead>
                                 <tr className="bg-gray-50 dark:bg-gray-700">
                                     <th className="px-4 py-3 text-left">Description</th>
+                                    <th className="px-4 py-3 text-left">UOM</th>
+
                                     <th className="px-4 py-3 text-right">Quantity</th>
                                     <th className="px-4 py-3 text-right">Unit Price</th>
                                     <th className="px-4 py-3 text-right">Total</th>
@@ -213,13 +220,14 @@ const EstimationContent = () => {
                                 {data?.materials.map((item, index) => (
                                     <tr key={item._id} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}>
                                         <td className="px-4 py-3">{item.description}</td>
+                                        <td className="px-4 py-3">{item.uom}</td>
                                         <td className="px-4 py-3 text-right">{item?.quantity}</td>
                                         <td className="px-4 py-3 text-right">{item?.unitPrice && item.unitPrice.toFixed(2)}</td>
                                         <td className="px-4 py-3 text-right">{item?.total && item.total.toFixed(2)}</td>
                                     </tr>
                                 ))}
                                 <tr className="font-semibold bg-gray-100 dark:bg-gray-600">
-                                    <td colSpan={3} className="px-4 py-3 text-right">Total Materials</td>
+                                    <td colSpan={4} className="px-4 py-3 text-right">Total Materials</td>
                                     <td className="px-4 py-3 text-right">{totalMaterials && totalMaterials.toFixed(2)}</td>
                                 </tr>
                             </tbody>

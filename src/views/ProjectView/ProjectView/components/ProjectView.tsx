@@ -12,7 +12,6 @@ import {
     Dialog,
     Select
 } from '@/components/ui'
-
 import { ClipLoader } from 'react-spinners'
 import { 
     HiOutlineEye, 
@@ -269,7 +268,6 @@ const StatusModal = ({
     )
 }
 
-
 const StatusModal2 = React.memo(({
     isOpen,
     onClose,
@@ -308,7 +306,7 @@ const StatusModal2 = React.memo(({
 
             onSuccess()
             onClose()
-            setComment('') // Reset comment after submission
+            setComment('')
         } catch (error) {
             console.error('Error updating project status:', error)
             setError(
@@ -328,7 +326,6 @@ const StatusModal2 = React.memo(({
         }
     }
 
-    // Reset state when modal closes
     useEffect(() => {
         if (!isOpen) {
             setComment('')
@@ -396,14 +393,14 @@ const ProjectView = () => {
     const [isOpen, setIsOpen] = useState(false)
     const [currentProjectId, setCurrentProjectId] = useState('')
     const [isStatusModalOpen2, setIsStatusModalOpen2] = useState(false)
-
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
     const [engineers, setEngineers] = useState<any[]>([])
     const [selectedEngineer, setSelectedEngineer] = useState<string | null>(null)
     const [engineersLoading, setEngineersLoading] = useState(false)
+    const [refreshActivity, setRefreshActivity] = useState(false)
     const userAuthority = useAppSelector((state) => state.auth.user.authority) || []
     const role = userAuthority[0] || 'finance'
-    const [isAssigning, setIsAssigning] = useState(false) // Add this state at the top with your other states
+    const [isAssigning, setIsAssigning] = useState(false)
 
     const fetchEngineersData = async () => {
         setEngineersLoading(true)
@@ -411,9 +408,8 @@ const ProjectView = () => {
             const response = await fetchEngineers()
             setEngineers(response.data.engineers)
 
-            // Set the currently assigned engineer if exists
             if (projectData?.assignedTo) {
-                setSelectedEngineer(projectData.assignedTo._id) // Changed to use _id
+                setSelectedEngineer(projectData.assignedTo._id)
             }
         } catch (error) {
             console.error('Failed to fetch engineers:', error)
@@ -425,7 +421,6 @@ const ProjectView = () => {
             setEngineersLoading(false)
         }
     }
-
 
     const openDrawer = () => {
         setIsOpen(true)
@@ -458,15 +453,18 @@ const ProjectView = () => {
     const handleApprovalSuccess = () => {
         fetchProject(id).then((data) => {
             setProjectData(data?.data)
+            setRefreshActivity(prev => !prev)
         })
+        window.location.reload()
     }
 
     const handleCheckSuccess = () => {
-        // Refresh data or show success message
-        console.log('Project status updated successfully')
+        fetchProject(id).then((data) => {
+            setProjectData(data?.data)
+            setRefreshActivity(prev => !prev)
+        })
     }
 
-   
     const handleAssignEngineer = async () => {
         if (!selectedEngineer || !id) {
             toast.push(
@@ -479,7 +477,7 @@ const ProjectView = () => {
             return
         }
     
-        setIsAssigning(true) // Start loading
+        setIsAssigning(true)
     
         try {
             await assignEngineer({
@@ -495,28 +493,22 @@ const ProjectView = () => {
                 { placement: 'top-center' },
             )
     
-            // Refresh project data
             const updatedProject = await fetchProject(id)
             setProjectData(updatedProject?.data)
-    
-            // Close the drawer
             onDrawerClose()
         } catch (error) {
             console.error('Assignment failed:', error)
-    
             let errorMessage = 'Failed to assign engineer'
             if (error.response?.data?.message) {
                 errorMessage = error.response.data.message
             }
-    
             toast.push(<Notification title={errorMessage} type="danger" />, {
                 placement: 'top-center',
             })
         } finally {
-            setIsAssigning(false) // Stop loading regardless of success/failure
+            setIsAssigning(false)
         }
     }
-    
 
     const handleAddDocument = (type: string) => {
         const document = documents.find((doc) => doc.type === type)
@@ -524,22 +516,23 @@ const ProjectView = () => {
             navigate(document.route, { state: { projectId: id } })
         }
     }
+
     useEffect(() => {
-        setProjectLoading(true);
+        setProjectLoading(true)
         fetchProject(id)
             .then((data) => {
-                setProjectData(data?.data);
-                setProjectLoading(false);
-    
-                const status = data?.data?.status || 'draft';
-                const isApproved = data?.data?.isApproved;
-                const hasAssignedEngineer = !!data?.data?.assignedTo;
-                const hasEstimation = !!data?.data?.estimationId;
-                const hasQuotation = !!data?.data?.quotationId;
-                const hasLPO = !!data?.data?.lpoId;
-                const hasInvoice = !!data?.data?.lopId;
-                const hasWorkProgress = !!data?.data?.lpoId;
-    
+                setProjectData(data?.data)
+                setProjectLoading(false)
+
+                const status = data?.data?.status || 'draft'
+                const isApproved = data?.data?.isApproved
+                const hasAssignedEngineer = !!data?.data?.assignedTo
+                const hasEstimation = !!data?.data?.estimationId
+                const hasQuotation = !!data?.data?.quotationId
+                const hasLPO = !!data?.data?.lpoId
+                const hasInvoice = !!data?.data?.lopId
+                const hasWorkProgress = !!data?.data?.lpoId
+
                 const baseDocuments = [
                     {
                         type: 'estimation',
@@ -550,10 +543,10 @@ const ProjectView = () => {
                         icon: '/img/document-icons/estimation.png',
                         roles: ['finance', 'super_admin', 'admin', 'engineer'],
                     }
-                ];
-    
-                let statusDocuments = [...baseDocuments];
-    
+                ]
+
+                let statusDocuments = [...baseDocuments]
+
                 if (isApproved && hasAssignedEngineer) {
                     statusDocuments.push({
                         type: 'quotation',
@@ -563,9 +556,9 @@ const ProjectView = () => {
                         exists: hasQuotation,
                         icon: '/img/document-icons/quotation.png',
                         roles: ['finance', 'super_admin', 'admin'],
-                    });
+                    })
                 }
-    
+
                 if (['quotation_sent', 'lpo_received', 'work_started', 'in_progress', 'work_completed', 'invoice_sent'].includes(status)) {
                     statusDocuments.push({
                         type: 'lpo',
@@ -575,9 +568,9 @@ const ProjectView = () => {
                         viewRoute: hasLPO ? `/app/lpo-view/${id}` : undefined,
                         icon: '/img/document-icons/lpo.png',
                         roles: ['finance', 'super_admin', 'admin'],
-                    });
+                    })
                 }
-    
+
                 if (['lpo_received', 'work_started', 'in_progress', 'work_completed', 'invoice_sent'].includes(status)) {
                     statusDocuments.push({
                         type: 'workProgress',
@@ -587,10 +580,9 @@ const ProjectView = () => {
                         exists: hasWorkProgress,
                         icon: '/img/document-icons/report.png',
                         roles: ['finance', 'super_admin', 'admin', 'engineer'],
-                    });
+                    })
                 }
-    
-                // Work Completion Report (view-only, appears when work is completed)
+
                 if (status === 'work_completed') {
                     statusDocuments.push({
                         type: 'workCompletion',
@@ -599,11 +591,10 @@ const ProjectView = () => {
                         exists: true,
                         icon: '/img/document-icons/completion.png',
                         roles: ['finance', 'super_admin', 'admin', 'engineer'],
-                    });
+                    })
                 }
-    
-                // Invoice (strictly view-only, appears last)
-                if (status === 'work_completed' ) {
+
+                if (status === 'work_completed') {
                     statusDocuments.push({
                         type: 'invoice',
                         title: 'Invoice',
@@ -611,18 +602,19 @@ const ProjectView = () => {
                         exists: id,
                         icon: '/img/document-icons/invoice.png',
                         roles: ['finance', 'super_admin', 'admin'],
-                    });
+                    })
                 }
-    
-                const filteredDocuments = statusDocuments.filter(doc => doc.roles?.includes(role));
-                setDocuments(filteredDocuments);
-                setLoading(false);
+
+                const filteredDocuments = statusDocuments.filter(doc => doc.roles?.includes(role))
+                setDocuments(filteredDocuments)
+                setLoading(false)
             })
             .catch((error) => {
-                console.error('Error fetching project:', error);
-                setProjectLoading(false);
-            });
-    }, [id, role]);
+                console.error('Error fetching project:', error)
+                setProjectLoading(false)
+            })
+    }, [id, role])
+
     return (
         <div className="flex flex-col gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -646,7 +638,7 @@ const ProjectView = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="lg:col-span-2 space-y-4">
                     <ProjectInfo projectdetails={projectData} />
-                    <Issue projectId={id} />
+                    <Issue projectId={id} refresh={refreshActivity} />
                 </div>
 
                 <div className="space-y-4">
@@ -737,7 +729,7 @@ const ProjectView = () => {
                                             <Button
                                                 block
                                                 variant="solid"
-                                                onClick={() => openStatusModal2()}
+                                                onClick={() => openStatusModal2(id || '')}
                                             >
                                                 Verify Project
                                             </Button>
@@ -796,21 +788,21 @@ const ProjectView = () => {
                                 )}
                             </div>
                         ))}
-                      <div className="mt-6 flex justify-end">
-    {isAssigning ? (
-        <div className="flex items-center justify-center">
-            <ClipLoader size={20} color="#3b82f6" />
-        </div>
-    ) : (
-        <Button
-            variant="solid"
-            onClick={handleAssignEngineer}
-            disabled={!selectedEngineer}
-        >
-            {selectedEngineer ? 'Confirm Assignment' : 'Select an engineer'}
-        </Button>
-    )}
-</div>
+                        <div className="mt-6 flex justify-end">
+                            {isAssigning ? (
+                                <div className="flex items-center justify-center">
+                                    <ClipLoader size={20} color="#3b82f6" />
+                                </div>
+                            ) : (
+                                <Button
+                                    variant="solid"
+                                    onClick={handleAssignEngineer}
+                                    disabled={!selectedEngineer}
+                                >
+                                    {selectedEngineer ? 'Confirm Assignment' : 'Select an engineer'}
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 ) : (
                     <div className="text-center py-4 text-gray-500 dark:text-gray-400">
@@ -819,19 +811,18 @@ const ProjectView = () => {
                 )}
             </Drawer>
 
-
             <StatusModal
                 isOpen={isStatusModalOpen}
                 onClose={closeStatusModal}
                 estimationId={projectData?.estimationId}
                 onSuccess={handleApprovalSuccess}
             />
-         <StatusModal2
-    isOpen={isStatusModalOpen2}
-    onClose={closeStatusModal2}
-    estimationId={projectData?.estimationId || ''}
-    onSuccess={handleCheckSuccess}
-/>
+            <StatusModal2
+                isOpen={isStatusModalOpen2}
+                onClose={closeStatusModal2}
+                estimationId={projectData?.estimationId || ''}
+                onSuccess={handleCheckSuccess}
+            />
         </div>
     )
 }
