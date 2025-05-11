@@ -150,6 +150,13 @@ const ProjectTable = () => {
                     <span className="capitalize">{props.row.original?.progress}</span>
                 ),
             },
+             {
+                header: 'Project Number',
+                accessorKey: 'progress',
+                cell: (props) => (
+                    <span className="capitalize">{props.row.original?.projectNumber}</span>
+                ),
+            },
             {
                 header: 'Status',
                 accessorKey: 'status',
@@ -191,6 +198,7 @@ const ProjectTable = () => {
 
     return (
         <>
+        
             <div className="mb-4">
                 <Input
                     placeholder="Search projects..."

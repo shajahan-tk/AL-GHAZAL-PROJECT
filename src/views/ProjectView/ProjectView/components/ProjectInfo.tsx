@@ -11,6 +11,7 @@ const ProjectInfo = ({ projectdetails: data }) => {
             <div className="flex items-center">
                 <div className="ltr:ml-2 rtl:mr-2">
                     <div className="font-semibold text-lg">{data?.projectName}</div>
+                    <div className="font-semibold text-lg">{data?.projectNumber}</div>
                     
                 </div>
             </div>
